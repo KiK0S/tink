@@ -1,0 +1,32 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[english, russian]{babel}
+
+
+\begin{document}
+\paragraph{№4. Решение} \hspace{\fill{}}
+\newline
+\quad Преобразуем выражение
+\newline
+$f(x, y) = x^4 + 2x^2y + 10x^2 + 6xy + 10y^2 - 6x + 4 = $ 
+\newline 
+$(x^4 + 2x^2y + y^2) + (x^2+ 6xy + 9y^2) + (9x^2 - 6x + 1) + 3 = $ 
+\newline 
+$(x^2 + y)^2 + (x + 3y)^2 + (3x - 1)^2 + 3$
+\newline 
+Заметим, что $f_{min} >= 3$, тк $a^2 >= 0$
+\newline
+При этом значение 3 достигается на решениях системы
+\newline
+\begin{equation}
+x^2 + y = 0 
+\end{equation}
+\begin{equation}
+x + 3y = 0 
+\end{equation}
+\begin{equation}
+3x - 1 = 0
+\end{equation}
+В данной системе, если решить (2) и (3), то (1) выполнится автоматически.
+Получаем $x = \frac{1}{3}, y = -\frac{1}{9}, f(x, y) = 3$
+\end{document}
