@@ -1,3 +1,5 @@
+import pickle
+
 class learner:
 	def __init__(self):
 		self.dict = {}
@@ -5,9 +7,8 @@ class learner:
 	
 	def loadtext(self):
 		self.filename = 'text.txt'
-		f = open(self.filename, 'r')
-		self.text = f.read().lower()
-		f.close()
+		with open(self.filename, 'r') as f:
+			self.text = f.read().lower()
 		self.tokenize()
 
 	def clear(self):
@@ -29,3 +30,13 @@ class learner:
 				self.count[s] = 0
 			self.count[s] += 1
 
+	def save(self):
+		print('data = ' + str(self.count))
+		with open('data_calc', 'wb') as f:
+			pickle.dump(self.count, f)
+
+
+obj = learner()
+obj.loadtext()
+obj.calc()
+obj.save()
