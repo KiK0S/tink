@@ -2,7 +2,7 @@ import pickle
 
 class learner:
 	def __init__(self):
-		self.dict = {}
+		self.pairs = {}
 		self.count = {}
 	
 	def loadtext(self):
@@ -24,19 +24,34 @@ class learner:
 		self.tokens = self.text.split()
 		self.clear()
 
-	def calc(self):
+	def calc_pairs(self):
+		for i in range(len(self.tokens) - 1):
+			s = self.tokens[i]
+			if s not in self.pairs:
+				self.pairs[s] = {}
+			nxt = self.tokens[i + 1]
+			if nxt not in self.pairs[s]:
+				self.pairs[s][nxt] = 0
+			self.pairs[s][nxt] += 1
+
+	def calc_counts(self):
 		for s in self.tokens:
 			if s not in self.count:
 				self.count[s] = 0
 			self.count[s] += 1
 
+	def fit(self):
+		self.calc_counts()
+		self.calc_pairs()
+
 	def save(self):
-		print('data = ' + str(self.count))
-		with open('data_calc', 'wb') as f:
+		with open('data_count', 'wb') as f:
 			pickle.dump(self.count, f)
+		with open('data_pairs', 'wb') as f:
+			pickle.dump(self.pairs, f)
 
 
 obj = learner()
 obj.loadtext()
-obj.calc()
+obj.fit()
 obj.save()
