@@ -1,6 +1,7 @@
 import pickle
 import random
 import learner
+import sys
 
 class generator:
 	def __init__(self):

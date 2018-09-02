@@ -1,0 +1,4 @@
+I will store here my code produced while studying in Tinkoff Generation(fintech.tinkoff.ru/junior/about/).
+
+My ml entrance project is stored in mldl/entrance/text_creator. to fit you should run "python3 learner.py" for generating "python3 generator.py", for doing both "python3 generator.py -f"
+

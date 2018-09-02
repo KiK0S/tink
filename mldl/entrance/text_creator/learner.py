@@ -1,4 +1,5 @@
 import pickle
+import sys
 
 class learner:
 	def __init__(self):
@@ -50,8 +51,10 @@ class learner:
 		with open('data_pairs', 'wb') as f:
 			pickle.dump(self.pairs, f)
 
-
-obj = learner()
-obj.loadtext()
-obj.fit()
-obj.save()
+if len(sys.argv) >= 2:
+	if sys.argv[1] == '-f':
+		print('learn')
+		obj = learner()
+		obj.loadtext()	
+		obj.fit()
+		obj.save()
