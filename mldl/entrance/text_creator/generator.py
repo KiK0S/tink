@@ -31,7 +31,7 @@ class generator:
 			else:
 				prob -= self.freq[val]
 
-	def generate(self, n=5):
+	def generate(self, n=9):
 		prev = self.generate_first_word()
 		s = prev + ' '
 		for i in range(n):
