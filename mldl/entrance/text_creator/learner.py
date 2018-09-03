@@ -9,7 +9,7 @@ class learner:
 		self.dots = set()
 	
 	def loadtext(self):
-		self.filename = 'text.txt'
+		self.filename = 'book.txt'
 		with open(self.filename, 'r') as f:
 			self.text = f.read().lower()
 		self.tokenize()
