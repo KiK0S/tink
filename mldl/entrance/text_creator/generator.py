@@ -1,74 +1,55 @@
 import pickle
 import random
 import learner
+import re
 import sys
 
 class generator:
 	def __init__(self):
-		with open('data_triplets', 'rb') as f:
-			self.trigram = pickle.load(f)
-		pass
+		n = 5
+		self.next = []
+		self.next.append({})
+		for i in range(1, n):
+			dictionary = {}
+			with open('data_' + str(i), 'rb') as f:
+				dictionary = pickle.load(f)
+			for s in dictionary:
+				lst = re.findall(r'\'(.*?)\'', s)
+				val = str(lst[:-1])
+				if val not in self.next[-1]:
+					self.next[-1][val] = []
+				self.next[-1][val].append((lst[-1], dictionary[s]))
+			self.next.append({})
 
-	def generate_trigram_word(self, first, second):
+	def my_random_choice(self, _list, cnt):
 		prob = random.random()
-		if second not in self.trigram[first]:
-			return self.generate_bigram_word(second)
-		prob *= sum(self.trigram[first][second].values())
-		for val in self.trigram[first][second]:
-			if self.trigram[first][second][val] >= prob:
-				# print('trigram')
-				# del self.trigram
-				return val
+		prob *= cnt
+		for key in _list:
+			if prob <= key[1]:
+				return key[0]
 			else:
-				prob -= self.trigram[first][second][val]
-		# del self.trigram
-		return self.generate_bigram_word(second)
+				prob -= key[1]
 
-	def generate_bigram_word(self, prev):
-		with open('data_pairs', 'rb') as f:
-			self.bigram = pickle.load(f)
-		prob = random.random()
-		prob *= sum(self.bigram[prev].values())
-		for val in self.bigram[prev]:
-			if self.bigram[prev][val] >= prob:
-				# print('bigram')
-				del self.bigram
-				return val
-			else:
-				prob -= self.bigram[prev][val]
-		del self.bigram
-		return self.generate_first_word()
+	def generate_next(self, prev):
+		n = len(prev)
+		key = str(prev)
+		if n >= len(self.next) or not key in self.next[n]:
+			return self.generate_next(prev[1:])
+		cnt_all = sum([x[1] for x in self.next[n][key]])
+		return self.my_random_choice(self.next[n][key], cnt_all)
 
-	def generate_first_word(self):
-		with open('data_count', 'rb') as f:
-			self.freq = pickle.load(f)
-		self.all = sum(self.freq.values())
-		prob = random.random()
-		prob *= self.all
-		for val in self.freq:
-			if self.freq[val] >= prob:
-				# print('single')
-				del self.freq
-				return val
-			else:
-				prob -= self.freq[val]
-		del self.freq
-
-	def generate(self, n):
+	def generate(self, size):
 		s = []
-		s.append(self.generate_first_word())
-		s.append(self.generate_bigram_word(s[-1]))
-		for i in range(n - 2):
-			s.append(self.generate_trigram_word(s[-2], s[-1]))
+		for i in range(size):
+			s.append(self.generate_next(s))
 		output = ""
 		for val in s:
 			output += val + ' '
 		print(output)
 
-# print('start')
 obj = generator()
 tests = int(input()) # 'how many samples?'))
-ln = int(input()) #'len?'))
+size = int(input()) # 'len?'))
 
 for i in range(tests):
-	obj.generate(ln)
+	obj.generate(size)

@@ -43,7 +43,7 @@ os.system('rm book.txt')
 os.system('rm ./data/txt/*')
 os.system('rm ./data/zip/*')
 
-for i in range(1, 10):
+for i in range(1, 4):
 	print(i)
 	link = 'https://www.litres.ru/kollekcii-knig/besplatnie-knigi/page-' + str(i) + '/'
 	web_page = requests.get(link)
