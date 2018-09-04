@@ -2,8 +2,9 @@ import pickle
 import sys
 
 class learner:
-	def __init__(self):
+	def __init__(self, n):
 		self.dots = set()
+		self.ngram_limit = n
 	
 	def loadtext(self):
 		self.filename = 'book.txt'
@@ -47,19 +48,17 @@ class learner:
 			self.value[key] += 1
 
 	def fit(self):
-		n = 5
-		for i in range(1, n):
+		for i in range(1, self.ngram_limit + 1):
 			self.value = {}
 			self.calc(i)
 			self.save(i)
 
 	def save(self, size):
 		with open('data_' + str(size), 'wb') as f:
-			pickle.dump(self.value, f)
-
-if len(sys.argv) >= 2:
-	if sys.argv[1] == '-f':
-		print('learn')
-		obj = learner()
-		obj.loadtext()	
-		obj.fit()
+			_list = []
+			for val in self.value:
+				_list.append(val + '_' + str(self.value[val]) + '\n')
+			_list.sort()
+			f.write((str(len(_list)) + '\n').encode('utf-8'))
+			for val in _list:
+				f.write((val).encode('utf-8'))
