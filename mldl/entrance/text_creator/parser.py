@@ -4,6 +4,7 @@ import re
 import urllib.request
 import time
 import random
+import sys
 
 def random_name():
 	s = ""
@@ -39,19 +40,32 @@ def download(url):
 		print(e)
 		pass
 
-os.system('rm book.txt')
-os.system('rm ./data/txt/*')
-os.system('rm ./data/zip/*')
+os.system('rm ./book.txt')
 
-for i in range(1, 10):
-	print(i)
-	link = 'https://www.litres.ru/kollekcii-knig/besplatnie-knigi/page-' + str(i) + '/'
-	web_page = requests.get(link)
-	# print(web_page.text)
-	s = re.findall(r'<a href="(.*?)" class="cover_href">', web_page.text)
-	# print(s)
-	for url in s:
-		download(url)
-		time.sleep(1)
-os.system('iconv -f WINDOWS-1251 -t UTF-8 -o ./book.txt ./data/txt/*')
-os.system('cat text.txt >> book.txt')
+if len(sys.argv) >= 2 and sys.argv[1] == '-d':
+	os.system('rm ./data/txt/*')
+	os.system('rm ./data/zip/*')
+	for i in range(1, 20):
+		print(i)
+		link = 'https://www.litres.ru/kollekcii-knig/besplatnie-knigi/page-' + str(i) + '/'
+		web_page = requests.get(link)
+		# print(web_page.text)
+		s = re.findall(r'<a href="(.*?)" class="cover_href">', web_page.text)
+		# print(s)
+		for url in s:
+			download(url)
+			time.sleep(1)
+os.system('ls ./data/txt >./list.txt')
+with open('list.txt', 'r') as f:
+	_all = f.readlines()
+	_all = [x[:-1] for x in _all]
+	# print(_all)
+	for name in _all:
+		# os.system('rm tmp')
+		try:
+			os.system('iconv -f WINDOWS-1251 -t UTF-8 -o tmp.txt ./data/txt/' + name)
+			os.system('mv tmp.txt ./data/txt/' + name)
+			print('ok ' + name) 
+		except Exception:
+			pass
+os.system('cat text.txt >> ./data/txt/book.txt')

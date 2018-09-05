@@ -6,10 +6,15 @@ class learner:
 		self.dots = set()
 		self.ngram_limit = n
 	
-	def loadtext(self):
-		self.filename = 'book.txt'
-		with open(self.filename, 'r') as f:
-			self.text = f.read().lower()
+	def loadtext(self, name):
+		filename = name
+		with open('./data/txt/' + filename, 'r') as f:
+			try:
+				self.text = f.read().lower()
+			except Exception as e:
+				self.text = ''
+				print(filename)
+				print(e)
 		self.tokenize()
 
 	def clear(self):
@@ -48,16 +53,22 @@ class learner:
 			self.value[key] += 1
 
 	def fit(self):
+		with open('list.txt', 'r') as f:
+			_all = f.readlines()
+			_all = [x[:-1] for x in _all]
 		for i in range(1, self.ngram_limit + 1):
 			self.value = {}
-			self.calc(i)
+			for name in _all:
+				self.loadtext(name)
+				self.calc(i)
 			self.save(i)
 
 	def save(self, size):
 		with open('data_' + str(size), 'wb') as f:
 			_list = []
 			for val in self.value:
-				_list.append(val + '_' + str(self.value[val]) + '\n')
+				if (self.value[val] > 1):
+					_list.append(val + '_' + str(self.value[val]) + '\n')
 			_list.sort()
 			f.write((str(len(_list)) + '\n').encode('utf-8'))
 			for val in _list:

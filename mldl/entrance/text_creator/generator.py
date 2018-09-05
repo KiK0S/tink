@@ -5,7 +5,7 @@ import re
 import sys
 
 class generator:
-	def __init__(self, n=4):
+	def __init__(self, n=5):
 		self.ngram_limit = n
 		pass
 
@@ -72,7 +72,6 @@ if len(sys.argv) >= 2:
 	if sys.argv[1] == '-f':
 		print('learn')
 		lrn = learner.learner(gen.ngram_limit)
-		lrn.loadtext()	
 		lrn.fit()
 
 
