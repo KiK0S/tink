@@ -9,31 +9,43 @@ class generator:
 		self.ngram_limit = n
 		pass
 
+	def check(self, a, b, eq):
+		list_a = a.split('_')[0][1:-1].split(', ')
+		list_b = b[1:-1].split(', ')
+		for i in range(min(len(list_a), len(list_b))):
+			if not list_a[i] == list_b[i]:
+				return list_a[i] < list_b[i]
+		return eq
+
 	def find(self, _list):
 		size = len(_list) + 1
 		key = str(_list)
 		with open('data_' + str(size), 'r') as f:
 			lines = f.readlines()
 			colloc_cnt = int(lines[0])
-			l = 0
-			r = colloc_cnt
-			while l + 1 < r:
-				mid = (l + r) // 2
-				if lines[mid] < key and not lines[mid][:len(key) - 1] == key[:len(key) - 1]:
-					l = mid
-				else:
-					r = mid
-			left_idx = r
-			l = 0
-			r = colloc_cnt
-			while l + 1 < r:
-				mid = (l + r) // 2
-				if lines[mid] < key:
-					l = mid
-				else:
-					r = mid
-			right_idx = r
-			return [s[:-1].split('_') for s in lines[left_idx:right_idx + 1]]
+			if not size == 1:
+				l = 0
+				r = colloc_cnt
+				while l + 1 < r:
+					mid = (l + r) // 2
+					if self.check(lines[mid], key, 0):
+						l = mid
+					else:
+						r = mid
+				left_idx = r
+				l = 0
+				r = colloc_cnt
+				while l + 1 < r:
+					mid = (l + r) // 2
+					if self.check(lines[mid], key, 1):
+						l = mid
+					else:
+						r = mid
+				right_idx = r
+			else:
+				left_idx = 1
+				right_idx = colloc_cnt
+			return [s[:-1].split('_') for s in lines[left_idx:right_idx]]
 
 	def my_random_choice(self, _list, cnt):
 		prob = random.random()
