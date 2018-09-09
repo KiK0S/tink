@@ -12,6 +12,7 @@ Belyaev_A._Ostrov_Pogibshih_KorableyIIIII.txt
 Belyaev_A._Prodavec_Vozduha_Chudesno.txt
 Blok_A._Spisokshkolnoy._Polnoe_Sobranie_Stihotvoreniyi.txt
 Bokkachcho_D._Dekameron.txt
+book.txt
 Bryeddon_M._Zolotoyivekde._Tayina_Ledi_Odli.txt
 Bulgakov_M._Morfiyi.txt
 Bulgakov_M._Priklyucheniya_PokoyinikaI.txt

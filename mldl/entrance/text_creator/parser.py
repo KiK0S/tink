@@ -40,7 +40,7 @@ def download(url):
 		print(e)
 		pass
 
-os.system('rm ./book.txt')
+# os.system('rm ./book.txt')
 
 if len(sys.argv) >= 2 and sys.argv[1] == '-d':
 	os.system('rm ./data/txt/*')
@@ -56,16 +56,16 @@ if len(sys.argv) >= 2 and sys.argv[1] == '-d':
 			download(url)
 			time.sleep(1)
 os.system('ls ./data/txt >./list.txt')
-with open('list.txt', 'r') as f:
-	_all = f.readlines()
-	_all = [x[:-1] for x in _all]
-	# print(_all)
-	for name in _all:
-		# os.system('rm tmp')
-		try:
-			os.system('iconv -f WINDOWS-1251 -t UTF-8 -o tmp.txt ./data/txt/' + name)
-			os.system('mv tmp.txt ./data/txt/' + name)
-			print('ok ' + name) 
-		except Exception:
-			pass
-os.system('cat text.txt >> ./data/txt/book.txt')
+# with open('list.txt', 'r') as f:
+# 	_all = f.readlines()
+# 	_all = [x[:-1] for x in _all]
+# 	print(_all)
+# 	for name in _all:
+# 		os.system('rm tmp')
+# 		try:
+# 			os.system('iconv -f WINDOWS-1251 -t UTF-8 -o tmp.txt ./data/txt/' + name)
+# 			os.system('mv tmp.txt ./data/blog/' + name)
+# 			print('ok ' + name) 
+# 		except Exception:
+# 			pass
+# os.system('cat text.txt >> ./data/txt/book.txt')

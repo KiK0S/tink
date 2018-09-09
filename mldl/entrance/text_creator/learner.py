@@ -59,6 +59,7 @@ class learner:
 		for i in range(1, self.ngram_limit + 1):
 			self.value = {}
 			for name in _all:
+				self.dots.clear()
 				self.loadtext(name)
 				self.calc(i)
 			self.save(i)
@@ -67,8 +68,8 @@ class learner:
 		with open('data_' + str(size), 'wb') as f:
 			_list = []
 			for val in self.value:
-				if (self.value[val] > 1):
-					_list.append(val + '_' + str(self.value[val]) + '\n')
+				# if (self.value[val] > 1):
+				_list.append(val + '_' + str(self.value[val]) + '\n')
 			_list.sort()
 			f.write((str(len(_list)) + '\n').encode('utf-8'))
 			for val in _list:

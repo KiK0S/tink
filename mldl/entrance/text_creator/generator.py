@@ -5,7 +5,7 @@ import re
 import sys
 
 class generator:
-	def __init__(self, n=5):
+	def __init__(self, n=4):
 		self.ngram_limit = n
 		pass
 
@@ -45,7 +45,11 @@ class generator:
 			else:
 				left_idx = 1
 				right_idx = colloc_cnt
-			return [s[:-1].split('_') for s in lines[left_idx:right_idx]]
+			result = [s[:-1].split('_') for s in lines[left_idx:right_idx]]
+			# if len(result) == 0:
+			# 	print(lines[left_idx - 10:left_idx + 10]) 
+			# print([s[:-1].split('_') for s in lines[left_idx:right_idx]])
+			return result
 
 	def my_random_choice(self, _list, cnt):
 		prob = random.random()
@@ -77,6 +81,7 @@ class generator:
 		for val in s:
 			output += val + ' '
 		print(output)
+		sys.stderr.write(output + '\n')
 
 gen = generator()
 
