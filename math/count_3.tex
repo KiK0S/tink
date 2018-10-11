@@ -1,0 +1,22 @@
+\documentclass{article}
+\usepackage[english, russian]{babel}
+\usepackage[utf8]{inputenc}
+
+\begin{document}
+	\paragraph{Серия 6, задача 10}
+	\hspace{\fill}
+	\newline
+	Для определенности скажем, что \newline 
+	$x_1 \le x_2 \le x_3 \le x_4 \le x_5$, \newline 
+	$a_1 \le a_2 \le .... \le a_{10}$ \newline
+	Тогда $a_1 = x_1 + x_2, a_{10} = x_4 + x_5$.
+	Заметим, что поскольку каждое $x_i$ встречается в четырех парах, то 
+	$\sum_{i = 1}^{10} a_i = \sum_{i=1}^5 x_i * 4$.
+	\newline
+	Тогда $\frac{\sum_{i=1}^{10}(a_i) - (a_1 + a_{10}) * 4}{4} = 					\frac{\sum_{i=1}^5(x_i * 4) - 4x_1 - 4x_2 - 4x_4 - 4x_5}{4} = x_3$. Отсюда следует, что мы можем посчитать значение $x_3$.
+	\newline	
+	Также заметим, что $a_2 = x_3 + x_1, a_9 = x_3 + x_5$, тогда мы можем посчитать $x_1 = a_2 - x_3, x_5 = a_9 - x_3$.
+	\newline
+	Последний шаг - $x_2 = a_1 - x_1, x_4 = a_{10} - x_5$
+	
+\end{document}
