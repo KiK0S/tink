@@ -23,7 +23,7 @@ typedef long long ll;
 #ifdef DEBUG
 	const int MAXN = 1 << 3;
 #else
-	const int MAXN = 1 << 19;
+	const int MAXN = 1 << 20;
 #endif
 
 string a, b;
