@@ -19,15 +19,145 @@
 using namespace std;
 typedef long long ll;
 
+namespace tl {
+	#ifdef DEBUG
+		const int MAXN = 150; 
+	#else
+		const int MAXN = 1100;
+	#endif
+
+	int n, l;
+
+	ll dp[MAXN][MAXN];
+	int pre[MAXN][MAXN];
+	int pd[MAXN];
+
+	vector<pair<int, int>> dots;
+
+	inline void init() {
+		// assert(n + 100 < MAXN);
+		// assert(l < MAXN);
+		for (int i = 0; i < MAXN; i++) {
+			for (int j = 0; j < MAXN; j++) {
+				dp[i][j] = 1e18;
+				pre[i][j] = -1;
+			}
+		}
+	}
+
+	int sz(int x) {
+		int cur = 1;
+		ll pw = 1;
+		while (pw * 10 <= x) {
+			pw *= 10;
+			cur++;
+		}
+		return cur;
+	}
+
+	void relax(int a, int b, int c, int d, int e) {
+		if (d < 0) {
+			return;
+		}
+		if (c < 0) {
+			if (dp[a][b] > e) {
+				dp[a][b] = e;
+				pre[a][b] = -1;
+			}
+			return;
+		}
+		if (dp[a][b] > dp[c][d] + e) {
+			dp[a][b] = dp[c][d] + e;
+			pre[a][b] = c;
+		}
+	}
+
+	inline void solve() {
+		init();
+		for (int i = 0; i < n; i++) {
+			int a;
+			cin >> a;
+			dots.push_back({a, 1});
+		}
+		for (ll i = 1; i <= 1e10; i *= 10) {
+			dots.push_back({i, 0});
+			if (i != 1) {
+				dots.push_back({i - 1, 0});
+			}
+		}
+		sort(dots.begin(), dots.end());
+		for (int i = 0; i < dots.size(); i++) {
+			pd[i] = (i == 0 ? 0 : pd[i - 1]) + dots[i].second;
+		}
+		dp[0][0] = 0;
+		n = dots.size();
+		for (int i = 0; i < dots.size(); i++) {
+			for (int j = 0; j < MAXN; j++) {
+				if (dots[i].second == 0) {
+					relax(i, j, i - 1, j, 0);
+					continue;
+				}
+				relax(i, j, i - 1, j - sz(dots[i].first) - 1, 0);
+				for (int k = 0; k < i; k++) {
+					relax(i, j, k - 1, j - sz(dots[i].first) - sz(dots[k].first) - 3, dots[i].first - dots[k].first + 1 - (pd[i] - (k == 0 ? 0ll : pd[k - 1])));
+				}
+			}
+		}
+		ll mn = 1e18;
+		int len = 0;
+		for (int i = 0; i <= l - 1; i++) {
+			if (dp[dots.size() - 1][i] < mn) {
+				mn = dp[dots.size() - 1][i];
+				len = i;
+			}
+		}
+		// cerr << len << ' ' << mn << '\n';
+		if (mn > 1e9) {
+			exit(1);
+		}
+		int fin = dots.size() - 1;
+		string ans = "";
+		ans += "]";
+		while (fin >= 0) {
+			// cerr << ans << '\n';
+			// cerr << fin << ' ' << len << '\n';
+			if (pre[fin][len] == fin - 1) {
+				if (dots[fin].second == 0) {
+					fin--;
+					continue;
+				}
+				int add = ans.size();
+				ans = to_string(dots[fin].first) + "," + ans;
+				fin = pre[fin][len];
+				add -= ans.size();
+				len += add;
+			}
+			else {
+				int add = ans.size();
+				ans = to_string(dots[pre[fin][len] + 1].first) + ".." + to_string(dots[fin].first) + "," + ans;
+				fin = pre[fin][len];
+				add -= ans.size();
+				len += add;
+			}
+		}
+		ans = "[" + ans;
+		ans[ans.size() - 2] = ']';
+		ans.pop_back();
+		cout << ans << '\n';
+	}
+
+}
+
+
+namespace wa{
 
 	#ifdef DEBUG
 		const int MAXN = 150; 
 	#else
-		const int MAXN = 4021;
+		const int MAXN = 3021;
 	#endif
 
-
-int n, l;
+	int n, l;
 	int dp[MAXN][MAXN];
 	int pre[MAXN][MAXN];
 	int getid[MAXN][MAXN];
@@ -218,90 +348,7 @@ int n, l;
 		ans.pop_back();
 		cout << ans << '\n';
 	}
-	inline void init1() {
-		// assert(n + 100 < MAXN);
-		// assert(l < MAXN);
-		for (int i = 0; i < MAXN; i++) {
-			for (int j = 0; j < MAXN; j++) {
-				dp[i][j] = 1e18;
-				pre[i][j] = -1;
-			}
-		}
-	}
-
-	inline void solve1() {
-		init1();
-		for (int i = 0; i < n; i++) {
-			int a;
-			cin >> a;
-			dots.push_back({a, 1});
-		}
-		for (ll i = 1; i <= 1e10; i *= 10) {
-			dots.push_back({i, 0});
-			if (i != 1) {
-				dots.push_back({i - 1, 0});
-			}
-		}
-		sort(dots.begin(), dots.end());
-		for (int i = 0; i < dots.size(); i++) {
-			pd[i] = (i == 0 ? 0 : pd[i - 1]) + dots[i].second;
-		}
-		dp[0][0] = 0;
-		n = dots.size();
-		for (int i = 0; i < dots.size(); i++) {
-			for (int j = 0; j < MAXN; j++) {
-				if (dots[i].second == 0) {
-					relax(i, j, i - 1, j, 0);
-					continue;
-				}
-				relax(i, j, i - 1, j - sz(dots[i].first) - 1, 0);
-				for (int k = 0; k < i; k++) {
-					relax(i, j, k - 1, j - sz(dots[i].first) - sz(dots[k].first) - 3, dots[i].first - dots[k].first + 1 - (pd[i] - (k == 0 ? 0ll : pd[k - 1])));
-				}
-			}
-		}
-		ll mn = 1e18;
-		int len = 0;
-		for (int i = 0; i <= l - 1; i++) {
-			if (dp[dots.size() - 1][i] < mn) {
-				mn = dp[dots.size() - 1][i];
-				len = i;
-			}
-		}
-		// cerr << len << ' ' << mn << '\n';
-		if (mn > 1e9) {
-			exit(1);
-		}
-		int fin = dots.size() - 1;
-		string ans = "";
-		ans += "]";
-		while (fin >= 0) {
-			// cerr << ans << '\n';
-			// cerr << fin << ' ' << len << '\n';
-			if (pre[fin][len] == fin - 1) {
-				if (dots[fin].second == 0) {
-					fin--;
-					continue;
-				}
-				int add = ans.size();
-				ans = to_string(dots[fin].first) + "," + ans;
-				fin = pre[fin][len];
-				add -= ans.size();
-				len += add;
-			}
-			else {
-				int add = ans.size();
-				ans = to_string(dots[pre[fin][len] + 1].first) + ".." + to_string(dots[fin].first) + "," + ans;
-				fin = pre[fin][len];
-				add -= ans.size();
-				len += add;
-			}
-		}
-		ans = "[" + ans;
-		ans[ans.size() - 2] = ']';
-		ans.pop_back();
-		cout << ans << '\n';
-	}
+}
 
 signed main() {
 	#ifdef DEBUG
@@ -316,10 +363,14 @@ signed main() {
 	int n, l;
 	cin >> l >> n;
 	if (n < 1000 && l < 1000) {
-		solve1();
+		tl::n = n;
+		tl::l = l;
+		tl::solve();
 	}
 	else {
-		solve2();
+		wa::n = n;
+		wa::l = l;
+		wa::solve();
 	}
 	return 0;
 }
