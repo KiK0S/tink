@@ -154,15 +154,15 @@ namespace wa{
 	#ifdef DEBUG
 		const int MAXN = 150; 
 	#else
-		const int MAXN = 3021;
+		const int MAXN = 3500;
 	#endif
 
 	int n, l;
 	int dp[MAXN][MAXN];
 	int pre[MAXN][MAXN];
 	int getid[MAXN][MAXN];
-	vector<int> bestans[MAXN][10];
-	vector<short> id[MAXN][10];
+	int bestans[MAXN][MAXN];
+	short id[MAXN][MAXN];
 
 	int pd[MAXN];
 
@@ -233,7 +233,6 @@ namespace wa{
 			dots.push_back({a, 1});
 		}
 		for (ll i = 10; i < 1e10; i *= 10) {
-			dots.push_back({i, 0});
 			dots.push_back({i - 1, 0});
 		}
 		sort(dots.begin(), dots.end());
@@ -246,20 +245,21 @@ namespace wa{
 		}
 		dp[0][0] = 0;
 		n = dots.size();
-		for (int j = 0; j < MAXN; j++) {
+		for (int j = 0; j <= l; j++) {
 			for (int i = 0; i < dots.size(); i++) {
 				if (dots[i].second == 0) {
 					relax(i, j, i - 1, j, 0);
 				}
 				else {
 					// relax(i, j, i - 1, j - sz(dots[i].first) - 1, 0);
-					for (int lg = 1; lg <= sz(dots[i].first); lg++) {
-						int nj = j - sz(dots[i].first) - lg - 3;
+					int _s = sz(dots[i].first);
+					for (int lg = 1; lg <= _s; lg++) {
+						int nj = j - _s - lg - 3;
 						if (nj < 0) {
 							continue;
 						}
 						int L = -1;
-						if (sz(dots[i].first) == lg) {
+						if (_s == lg) {
 							if (getid[i][nj] > 0) {
 								L = id[nj][lg - 1][getid[i][nj] - 1];
 							}
@@ -294,14 +294,15 @@ namespace wa{
 					// 		idx = id[j][sz(dots[i].first)][k];
 					// 	}
 					// }
-					if (bestans[j][sz(dots[i].first) - 1].size() && -1 * bestans[j][sz(dots[i].first) - 1].back() <= nw) {
+					int ind = sz(dots[i].first) - 1;
+					if (bestans[j][ind].size() && -1 * bestans[j][ind].back() <= nw) {
 						nw = -1 * bestans[j][sz(dots[i].first) - 1].back();
-						idx = id[j][sz(dots[i].first) - 1].back();
+						idx = id[j][ind].back();
 					}
-					bestans[j][sz(dots[i].first) - 1].push_back(-nw);
-					assert(sz(dots[idx].first) == sz(dots[i].first));
-					getid[i][j] = id[j][sz(dots[i].first) - 1].size();
-					id[j][sz(dots[i].first) - 1].push_back(idx);
+					bestans[j][ind].push_back(-nw);
+					// assert(sz(dots[idx].first) == sz(dots[i].first));
+					getid[i][j] = id[j][ind].size();
+					id[j][ind].push_back(idx);
 				// }
 			}
 		}
