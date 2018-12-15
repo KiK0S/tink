@@ -55,10 +55,14 @@ if len(sys.argv) >= 2 and sys.argv[1] == '-d':
 		for url in s:
 			download(url)
 			time.sleep(1)
-os.system('ls ./data/txt >./list.txt')
+# os.system('ls ./data/txt >./list.txt')
 # with open('list.txt', 'r') as f:
 # 	_all = f.readlines()
 # 	_all = [x[:-1] for x in _all]
+# 	for name in _all:
+# 		print(name)
+# 		os.system('cat ./data/txt/' + name + ' >> ./data/book.txt')
+# 		print(os.popen('cat ./data/book.txt | tail -n 10 | head -n 5').read())
 # 	print(_all)
 # 	for name in _all:
 # 		os.system('rm tmp')
@@ -68,4 +72,5 @@ os.system('ls ./data/txt >./list.txt')
 # 			print('ok ' + name) 
 # 		except Exception:
 # 			pass
-# os.system('cat text.txt >> ./data/txt/book.txt')
+	
+os.system('cat text.txt >> ./data/txt/book.txt')
