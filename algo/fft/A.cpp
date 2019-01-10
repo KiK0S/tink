@@ -74,6 +74,7 @@ inline void solve() {
 		_b[i] = complex<double>((i < b.size() ? b[i] : '0') - '0');
 	}
 	vector<complex<double>> ans_a(MAXN), ans_b(MAXN);
+	cerr << a << ' ' << b << '\n';
 	fft(_a, ans_a, MAXN, complex<double>(cos(2 * atan2(0, -1) / MAXN), sin(2 * atan2(0, -1) / MAXN)), 0, 1, 0);
 	fft(_b, ans_b, MAXN, complex<double>(cos(2 * atan2(0, -1) / MAXN), sin(2 * atan2(0, -1) / MAXN)), 0, 1, 0);
 	vector<complex<double>> _c(MAXN), ans_c(MAXN);
