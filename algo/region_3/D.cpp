@@ -24,7 +24,7 @@ typedef long long ll;
 #ifdef DEBUG
 	const int MAXN = 100;
 #else
-	const int MAXN = 1e5 + 100;
+	const int MAXN = 1e3 + 100;
 #endif
 
 int n, m, s, k, t;
@@ -53,41 +53,10 @@ inline int unite(int a, int b) {
 	return 1;
 }
 
-void check(int a, int b) {
-	if (get(a) == get(b)) {
-		int cnt = 0;
-		vector<int> A, B;
-		while (dsu[a] != a) {
-			A.push_back(a);
-			a = dsu[a];
-			cnt++;
-		}
-		A.push_back(a);
-		while (dsu[b] != b) {
-			B.push_back(b);
-			b = dsu[b];
-			cnt++;
-		}
-		B.push_back(b);
-		for (auto it : A) {
-			cerr << it << ' ';
-		}
-		cerr << '\n';
-		reverse(A.begin(), A.end());
-		reverse(B.begin(), B.end());
-		int pnt = 0;
-		while (pnt < A.size() && pnt < B.size() && A[pnt] == B[pnt]) {
-			cnt -= 2;
-			pnt++;
-		}
-		cout << cnt << '\n';
-		exit(0);
-	}
-}
-
 inline void init() {
 	for (int i = 0; i < MAXN; i++) {
 		dsu[i] = i;
+		sum[i] = 1;
 	}
 }
 
@@ -101,45 +70,37 @@ inline void solve() {
 	}
 	int q;
 	cin >> q;
-	int _a, _b;
-	if (q == 1) {
-		cin >> _a >> _b;
-		_a--, _b--;
-		if (get(_a) == get(_b)) {
-			cout << "0\n";
-			return;
-		}
+	vector<pair<int, int>> query(q);
+	for (int i = 0; i < q; i++) {
+		cin >> query[i].first >> query[i].second;
+		query[i].first--, query[i].second--;
 	}
-	while (clock() * 10 < 4 * CLOCKS_PER_SEC) {
+	vector<int> ans(q, -1);
+	for (int h = 0; h < MAXN; h++) {
+		for (int i = 0; i < q; i++) {
+			if (ans[i] != -1) {
+				continue;
+			}
+			if (get(query[i].first) == get(query[i].second)) {
+				ans[i] = h;
+			}
+		}
+		vector<pair<int, int>> eq;
 		for (int a = 0; a < k; a++) {
-			for (int b = a + 1; b < k; b++) {
-				if (get(a) != get(b)) {
-					continue;
-				}
-				for (int r = 1; r <= s; r++) {
-					unite(r * k + a, r * k + b);
-					if (q == 1) {
-						check(_a, _b);
+			for (int b = 0; b < k; b++) {
+				if (get(a) == get(b)) {
+					for (int r = 1; r <= s; r++) {
+						eq.emplace_back(r * k + a, r * k + b);
 					}
 				}
 			}
 		}
-	}
-	if (q == 1) {
-		cout << "-1\n";
-		return;
-	}
-	for (int i = 0; i < q; i++) {
-		int a, b;
-		cin >> a >> b;
-		a--, b--;
-		if (get(a) == get(b)) {
-			cout << "1\n";
+		for (auto it : eq) {
+			unite(it.first, it.second);
 		}
-		else {
-			cout << "-1\n";
-		}
-		// cout << get(a, b) - 1 << '\n';
+	}
+	for (auto it : ans) {
+		cout << it << '\n';
 	}
 }
 
