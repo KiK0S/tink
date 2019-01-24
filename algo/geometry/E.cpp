@@ -24,11 +24,11 @@ typedef long long ll;
 #ifdef DEBUG
 	const int MAXN = 10;
 #else
-	const int MAXN = 1e5;
+	const int MAXN = 100;
 #endif
 
 int Q, n;
-
+#define double long double
 
 struct V {
 	double x, y;
@@ -77,14 +77,7 @@ V operator ^ (L f, L s) {
 		return f.f;
 	}
 	return V((f.b * s.c - f.c * s.b) / (f.a * s.b - f.b * s.a), 
-			 (f.a * s.c - f.c * s.a) / (f.b * s.a - f.a * s.b));
-}
-
-int cross(L f, L s) {
-	if (f.a * s.b == s.a * f.b) {
-		return 0;
-	}
-	return 1;
+		(f.a * s.c - f.c * s.a) / (f.b * s.a - f.a * s.b));
 }
 
 double dist(V v, L l) {
@@ -95,27 +88,8 @@ bool in(V p, L l) {
 	return dist(p, l) <= 50;
 }
 
-bool intersect_1(double a, double b, double c, double d) {
-	if (a > b) {
-		swap(a, b);
-	}
-	if (c > d) {
-		swap(c, d);
-	}
-	return min(b, d) <= max(a, c);
-}
-
-double s(V A, V B, V C) {
-	return (B - A) ^ (C - A);
-}
-
-bool intersect(V A, V B, V C, V D) {
-	return intersect_1(A.x, B.x, C.x, D.x) && intersect_1(A.y, B.y, C.y, D.y) &&
-			s(A, B, C) * s(A, B, D) <= 0 && s(C, D, A) * s(C, D, B) <= 0;
-}
-
 void resize(V &a, double k) {
-	double len = sqrt(a.x * a.x + a.y * a.y);
+	double len = sqrtl(a.x * a.x + a.y * a.y);
 	a.x /= len;
 	a.y /= len;
 	a.x *= k;
@@ -123,107 +97,62 @@ void resize(V &a, double k) {
 }
 
 V q[MAXN][2];
-V top[MAXN][2];
-V bot[MAXN][2];
 L ln[MAXN];
 
-inline void init() {
-
-}
-
-void get(V &lb, V &lt, V &rb, V &rt, vector<int> &idx, int level = 0) {
-	if (level > 20) {
+void check(V x) {
+	if (x.x < 0 || x.x > Q || x.y < 0 || x.y > Q) {
 		return;
 	}
-	if (clock() * 1.0 >= CLOCKS_PER_SEC * 3.8) {
-		cout << "YES\n";
-		exit(0);
+	double mn = 1e9;
+	for (int i = 0; i < n; i++) {
+		mn = min(dist(x, ln[i]), mn);
 	}
-	bool sm = 0;
-	vector<int> nxt;
-	for (auto i : idx) {
-		if (in(lb, ln[i])) {
-			nxt.push_back(i);
-			sm = 1;
-		}
-		if (in(lt, ln[i])) {
-			nxt.push_back(i);
-			sm = 1;
-		}
-		if (in(rb, ln[i])) {
-			nxt.push_back(i);
-			sm = 1;
-		}
-		if (in(rt, ln[i])) {
-			nxt.push_back(i);
-			sm = 1;
-		}
-		if (in(lb, ln[i]) && in(lt, ln[i]) && in(rb, ln[i]) && in(rt, ln[i])) {
-			// exit(1);
-			return;
-		}
-	}
-	for (auto i : idx) {
-		{
-			V cross = L(lb, lt) ^ ln[i];
-			if ((lt - cross) * (lb - cross) <= 0) {
-				sm = 1;
-				nxt.push_back(i);
-			}
-		}
-		{
-			V cross = L(lb, rb) ^ ln[i];
-			if ((lb - cross) * (rb - cross) <= 0) {
-				sm = 1;
-				nxt.push_back(i);
-			}
-		}
-		{
-			V cross = L(rt, lt) ^ ln[i];
-			if ((rt - cross) * (lt - cross) <= 0) {
-				sm = 1;
-				nxt.push_back(i);
-			}
-		}
-		{
-			V cross = L(rb, rt) ^ ln[i];
-			if ((rt - cross) * (rb - cross) <= 0) {
-				sm = 1;
-				nxt.push_back(i);
-			}
-		}
-	}
-	sort(nxt.begin(), nxt.end());
-	V lm(lb.x, (lb.y + lt.y) / 2);
-	V rm(rb.x, (rb.y + rt.y) / 2);
-	V mt((lt.x + rt.x) / 2, lt.y);
-	V mb((lb.x + rb.x) / 2, lb.y);
-	V mm((lb.x + rb.x) / 2, (lb.y + lt.y) / 2);
-	if (!sm) {
+	// cerr << mn << ' ' << '\n';
+	if (mn > 50 + 1e-10) {
 		cout << "NO\n";
-		cout << mm.x << ' ' << mm.y << '\n';
+		cout << fixed << setprecision(10) << x.x << ' ' << x.y << '\n';
 		exit(0);
 	}
-	nxt.resize(unique(nxt.begin(), nxt.end()) - nxt.begin());
-	get(lb, lm, mb, mm, nxt, level + 1);
-	get(mb, mm, rb, rm, nxt, level + 1);
-	get(lm, lt, mm, mt, nxt, level + 1);
-	get(mm, mt, rm, rt, nxt, level + 1);
 }
 
 inline void solve() {
-	init();
-	vector<int> f;
+	vector<L> lines;
 	for (int i = 0; i < n; i++) {
 		cin >> q[i][0] >> q[i][1];
 		ln[i] = L(q[i][0], q[i][1]);
-		f.push_back(i);
+		V napr = q[i][0] - q[i][1];
+		V norm(-napr.y, napr.x);
+		resize(norm, 50 + 1e-8);
+		lines.emplace_back(q[i][0] + norm, q[i][1] + norm);
+		lines.emplace_back(q[i][0] - norm, q[i][1] - norm);
 	}
-	V A(0, 0);
-	V B(0, Q);
-	V C(Q, 0);
-	V D(Q, Q);
-	get(A, B, C, D, f);
+	lines.emplace_back(V(0, 0), V(0, Q));
+	lines.emplace_back(V(0, 0), V(Q, 0));
+	lines.emplace_back(V(0, Q), V(Q, Q));
+	lines.emplace_back(V(Q, 0), V(Q, Q));
+	vector<V> points;
+	for (int i = 0; i < lines.size(); i++) {
+		for (int j = i + 1; j < lines.size(); j++) {
+			points.push_back(lines[i] ^ lines[j]);
+		}
+	}
+	for (auto x : points) {
+		check(x);
+	}
+	int k = 1e5;
+	for (int i = 0; i <= k; i++) {
+		check(V(0, Q * 1.0 / k * i));
+		check(V(Q, Q * 1.0 / k * i));
+		check(V(Q * 1.0 / k * i, 0));
+		check(V(Q * 1.0 / k * i, Q));
+	}
+	while (clock() * 1.0 < CLOCKS_PER_SEC * 0.8) {
+		int C = Q * 1000;
+		V rnd(rand() % C, rand() % C);
+		rnd.x /= 1000;
+		rnd.y /= 1000;
+		check(rnd);
+	}
 	cout << "YES\n";
 }
 
@@ -234,6 +163,7 @@ signed main() {
 	#else
 	
 	#endif
+	srand(time(0));
 	ios_base::sync_with_stdio(0);
 	cin.tie(0);
 	cout.tie(0);
