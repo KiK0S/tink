@@ -42,6 +42,7 @@ const int MOD = 1e9 + 7;
 int n;
 
 string ans;
+const int BLOCK_SIZE = 10;
 
 void read();
 void go_left(int cnt);
@@ -55,6 +56,8 @@ void end_cycle();
 void single_substraction(int cnt);
 void single_addition(int cnt);
 void print();
+void next_block();
+void prev_block();
 
 void read() {
 	ans += ">";
@@ -143,20 +146,48 @@ void copy_segment(int cnt) {
 
 void addition(int delta) {
 	start_cycle();
-	go_right(delta);
+	if (delta > 0) {
+		go_right(delta);
+	}
+	else {
+		go_left(-delta);
+	}
 	single_addition(1);
-	go_left(delta);
+	if (delta > 0) {
+		go_left(delta);
+	}
+	else {
+		go_right(-delta);
+	}
 	single_substraction(1);
 	end_cycle();
 }
 
 void substraction(int delta) {
 	start_cycle();
-	go_right(delta);
+	if (delta > 0) {
+		go_right(delta);
+	}
+	else {
+		go_left(-delta);
+	}
 	single_substraction(1);
-	go_left(delta);
+	if (delta > 0) {
+		go_left(delta);
+	}
+	else {
+		go_right(-delta);
+	}
 	single_substraction(1);
 	end_cycle();
+}
+
+void next_block() {
+	go_right(BLOCK_SIZE);
+}
+
+void prev_block() {
+	go_left(BLOCK_SIZE);
 }
 
 void start_cycle() {
@@ -174,18 +205,21 @@ inline void init() {
 inline void solve() {
 	init();
 	read();
-	go_right(2);
-	copy_single(-1);
-	go_left(1);
+	next_block();
+	read();
+	prev_block();
 	copy_segment(2);
-	// go_right(2);
-	// read();
-	// go_right(2);
-	// copy_single(-2);
-	// go_left(3);
-	// addition(1);
-	// go_right(1);
-	// print();
+	go_right(2);
+	copy_single(-2);
+	go_left(1);
+	copy_single(BLOCK_SIZE);
+	go_left(1);
+	next_block();
+	addition(1);
+	go_right(1);
+	copy_single(-1);
+	go_left(-1);
+	print();
 	cout << ans << '\n';
 }
 
