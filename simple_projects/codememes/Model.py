@@ -9,226 +9,227 @@ from matplotlib import pyplot as plt
 from IPython.display import clear_output
 
 model = KeyedVectors.load_word2vec_format('model_prime.txt')
-
 PROFITS = {
-    'r': 1,
-    'b': -1.5,
-    'd': -1000,
-    'w': -0.7
+	'r': 1,
+	'b': -1.9,
+	'd': -1000,
+	'w': -0.9
 }
 
 class Word:
-    def __init__(self):
-        self.word = ''
-        self.marker = ''
-        self.used = False
-    
-    def __init__(self, s, marker=''):
-        self.word = s.lower().replace('\xad', '').replace('ё', 'е')
-        self.marker = marker
-        self.used = False
-    
-    def __repr__(self):
-        if self.used:
-            return self.word + '_' + self.marker
-        return self.word
-    
-    def make_random(self):
-        self.cnt = 0
-        self.dict = {}
-    
-    def calc_profit(self):
-        self.profit = 0
-        if self.cnt == 0:
-            return
-        for a, b in PROFITS.items():
-            if not a in self.dict:
-                self.dict[a] = 0
-            self.profit += (self.dict[a] / self.cnt) * b
+	def __init__(self):
+		self.word = ''
+		self.marker = ''
+		self.used = False
+	
+	def __init__(self, s, marker=''):
+		self.word = s.lower().replace('\xad', '').replace('ё', 'е')
+		self.marker = marker
+		self.used = False
+	
+	def __repr__(self):
+		if self.used:
+			return self.word + '_' + self.marker
+		return self.word
+	
+	def make_random(self):
+		self.cnt = 0
+		self.dict = {}
+	
+	def calc_profit(self):
+		self.profit = 0
+		if self.cnt == 0:
+			return
+		for a, b in PROFITS.items():
+			if not a in self.dict:
+				self.dict[a] = 0
+			self.profit += (self.dict[a] / self.cnt) * b
 
 class Field:
-    def __init__(self):
-        self.current = 0
-        self.n = 25
-        self.all = []
-    
-    def __iter__(self):
-        self.current = 0
-        return self
-    
-    def __next__(self):
-        if self.current == self.n:
-            raise StopIteration
-        result = self.all[self.current]
-        self.current += 1
-        return result
+	def __init__(self):
+		self.current = 0
+		self.n = 25
+		self.all = []
+	
+	def __iter__(self):
+		self.current = 0
+		return self
+	
+	def __next__(self):
+		if self.current == self.n:
+			raise StopIteration
+		result = self.all[self.current]
+		self.current += 1
+		return result
 
-    def __len__(self):
-        return len(self.all)
-    
-    def gen(self):
-        with open('words.txt') as f:
-            wordlist = f.readline().split()
-            wordlist = [x for x in wordlist]
-            markers = ['r'] * 9 + ['b'] * 8 + ['d'] * 1 + ['w'] * 7
-            self.all = [Word(x, y) for x, y in zip(random.sample(wordlist, self.n), markers)]
-        random.shuffle(self.all)
-    
-    def game_over(self):
-        ok_r = False
-        for s in self:
-            if s.used:
-                continue
-            if s.marker == 'r':
-                ok_r = True
-        ok_b = False
-        for s in self:
-            if s.used:
-                continue
-            if s.marker == 'b':
-                ok_b = True
-        ok_d = True
-        for s in self:
-            if s.marker == 'd' and s.used:
-                ok_d = False
-        return (not ok_r) or (not ok_b) or (not ok_d)
-    
-    def print_with_markers(self):
-        for s in self:
-            print(s.word + '_' + s.marker)
-    
-    def __repr__(self):
-        res = ''
-        for s in self:
-            res += str(s) + '\n'
-        return res
+	def __len__(self):
+		return len(self.all)
+	
+	def gen(self):
+		with open('words.txt') as f:
+			wordlist = f.readline().split()
+			wordlist = [x for x in wordlist]
+			markers = ['r'] * 9 + ['b'] * 8 + ['d'] * 1 + ['w'] * 7
+			self.all = [Word(x, y) for x, y in zip(random.sample(wordlist, self.n), markers)]
+		random.shuffle(self.all)
+	
+	def game_over(self):
+		ok_r = False
+		for s in self:
+			if s.used:
+				continue
+			if s.marker == 'r':
+				ok_r = True
+		ok_b = False
+		for s in self:
+			if s.used:
+				continue
+			if s.marker == 'b':
+				ok_b = True
+		ok_d = True
+		for s in self:
+			if s.marker == 'd' and s.used:
+				ok_d = False
+		return (not ok_r) or (not ok_b) or (not ok_d)
+	
+	def print_with_markers(self):
+		res = ''
+		for s in self:
+			res += s.word + '_' + s.marker + '\n'
+		return res
+	
+	def __repr__(self):
+		res = ''
+		for s in self:
+			res += str(s) + '\n'
+		return res
 
 def similar_list(wordlist):
-    if len(wordlist) == 0:
-        return []
-    return model.most_similar(positive=wordlist)
+	if len(wordlist) == 0:
+		return []
+	return model.most_similar(positive=wordlist)
 
 LEVENSHTEIN_THRESHOLD = 4
 def filtered_similars(wordlist):
-    unfiltered = similar_list(wordlist)
-    result = []
-    for s, dist in unfiltered:
-        ok = True
-        for parent in wordlist:
-            if levenshtein_distance(parent, s) <= LEVENSHTEIN_THRESHOLD or parent in s:
-                ok = False
-        if ok:
-            result.append((s, dist))
-    return result
+	unfiltered = similar_list(wordlist)
+	result = []
+	for s, dist in unfiltered:
+		ok = True
+		for parent in wordlist:
+			if levenshtein_distance(parent, s) <= LEVENSHTEIN_THRESHOLD or parent in s:
+				ok = False
+		if ok:
+			result.append((s, dist))
+	return result
 
 def query(wordlist):
-    return filtered_similars(wordlist)
+	return filtered_similars(wordlist)
 
 def find_candidates(field, marker='r'):
-    good_words = [x.word for x in field if x.marker == marker]
-    result = set()
-    for i in range(1, len(good_words)):
-        for lists in [query(_) for _ in list(itertools.combinations(good_words, i + 1))]:
-            for value in lists:
-                result.add(value[0])
-    return result
+	good_words = [x.word for x in field if x.marker == marker]
+	result = set()
+	for i in range(1, len(good_words)):
+		for lists in [query(_) for _ in list(itertools.combinations(good_words, i + 1))]:
+			for value in lists:
+				result.add(value[0])
+	return result
 
 def scaling(x):
-    return exp(x * 2)
+	return exp(x * 2)
 
 
 CAN_GUESS_THRESHOLD = 0.3
 def guess(field, word, top_n=-1):
-    pairs = []
-    random_word = Word('', 'random')
-    random_word.make_random()
-    for item in field:
-        if item.used:
-            continue
-        val = scaling(model.similarity(word, item.word))
-        if val > CAN_GUESS_THRESHOLD:
-            pairs.append((val, item))
-        else:
-            random_word.cnt += 1
-            if not item.marker in random_word.dict:
-                random_word.dict[item.marker] = 0
-            random_word.dict[item.marker] += 1
-    random_word.calc_profit()
-    if top_n != -1:
-        result = [(b, a) for a, b in sorted(pairs)[::-1]]
-        while len(result) < top_n:
-            result.append((random_word, scaling(CAN_GUESS_THRESHOLD - 0.1)))
-        return result[:top_n]
-    else:
-        return pairs
+	pairs = []
+	random_word = Word('', 'random')
+	random_word.make_random()
+	for item in field:
+		if item.used:
+			continue
+		val = scaling(model.similarity(word, item.word))
+		if val > CAN_GUESS_THRESHOLD:
+			pairs.append((val, item))
+		else:
+			random_word.cnt += 1
+			if not item.marker in random_word.dict:
+				random_word.dict[item.marker] = 0
+			random_word.dict[item.marker] += 1
+	random_word.calc_profit()
+	if top_n != -1:
+		result = [(b, a) for a, b in sorted(pairs)[::-1]]
+		while len(result) < top_n:
+			result.append((random_word, scaling(CAN_GUESS_THRESHOLD - 0.1)))
+		return result[:top_n]
+	else:
+		return pairs
 
 def calc_profit(wordlist, marker, coefficients):
-    result = 0
-    current_iter = 1
-    for x, y in zip(wordlist, coefficients):
-        if x.marker == 'random':
-            result += x.profit * y / log2(current_iter + 1)
-        else:
-            result += PROFITS[x.marker] * y / log2(current_iter + 1)
-        current_iter += 1
-    return result
+	result = 0
+	current_iter = 1
+	for x, y in zip(wordlist, coefficients):
+		if x.marker == 'random':
+			result += x.profit * y / log2(current_iter + 1)
+		else:
+			result += PROFITS[x.marker] * y / log2(current_iter + 1)
+		current_iter += 1
+	return result
 
 def bruteforce(field, marker):
-    candidates = find_candidates(field, marker)
-    all_moves = []
-    for number in range(1, len(field) + 1):
-        for word in candidates:
-            guessed = guess(field, word, number)
-            wordlist = [x for x, _ in guessed]
-            probs = [1 for _, x in guessed]
-            all_moves.append((calc_profit(wordlist, marker, probs), (word, number), [x.word + '_' + x.marker for x in wordlist]))
-    return sorted(all_moves)[::-1]
+	candidates = find_candidates(field, marker)
+	all_moves = []
+	for number in range(1, len(field) + 1):
+		for word in candidates:
+			guessed = guess(field, word, number)
+			wordlist = [x for x, _ in guessed]
+			probs = [1 for _, x in guessed]
+			all_moves.append((calc_profit(wordlist, marker, probs), (word, number), [x.word + '_' + x.marker for x in wordlist]))
+	return sorted(all_moves)[::-1]
 
 def do_move(field, forbidden, answers):
-    moves = bruteforce(field, 'r')
-    for _, move, ans in moves:
-        if not move in forbidden:
-            forbidden.append(move)
-            answers.append(ans)
-            return move
-    return ('-', 1)
+	moves = bruteforce(field, 'r')
+	for _, move, ans in moves:
+		if not move in forbidden:
+			forbidden.append(move)
+			answers.append(ans)
+			return move
+	return ('-', 1)
 
 def do_guess(field, word):
-    sorted_list = guess(field, word)
-    return sorted_list[0][1]
+	sorted_list = guess(field, word)
+	return sorted_list[0][1]
 
 def do_clear(field, word):
-    for i, w in enumerate(field):
-        if w.used:
-            continue
-        if w.word == word:
-            field.all[i].used = True
-            return
+	for i, w in enumerate(field):
+		if w.used:
+			continue
+		if w.word == word:
+			field.all[i].used = True
+			return
 
 def start_game():
-    field = Field()
-    field.gen()
-    answers = []
-    moves = []
-    guesses = []
-    while not field.game_over():
-        clear_output()
-        print(field)
-        # field.print_with_markers()
-        move = do_move(field, moves, answers)
-        print(move)
-        for i in range(move[1]):
-            inp = input()
-            guesses.append(inp)
-            do_clear(field, inp)
-    clear_output()
-    field.print_with_markers()
-    ptr = 0
-    for i in range(len(moves)):
-        print('========')
-        print(moves[i])
-        for j in range(moves[i][1]):
-            print(guesses[ptr], end=' ')
-            ptr += 1
-        print()
-        print(answers[i])
+	field = Field()
+	field.gen()
+	answers = []
+	moves = []
+	guesses = []
+	while not field.game_over():
+		clear_output()
+		print(field)
+		move = do_move(field, moves, answers)
+		print(move)
+		for i in range(move[1]):
+			inp = input()
+			guesses.append(inp)
+			do_clear(field, inp)
+	clear_output()
+	field.print_with_markers()
+	ptr = 0
+	for i in range(len(moves)):
+		print('========')
+		print(moves[i])
+		for j in range(moves[i][1]):
+			print(guesses[ptr], end=' ')
+			ptr += 1
+		print()
+		print(answers[i])
+print('import ok')
