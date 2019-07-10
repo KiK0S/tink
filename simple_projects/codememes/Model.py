@@ -1,21 +1,19 @@
 import gensim
 import random
 import itertools
+import logging
 from math import exp, log2
 from sklearn.utils.extmath import softmax
 from gensim.models.keyedvectors import KeyedVectors
 from Levenshtein import distance as levenshtein_distance
-from matplotlib import pyplot as plt
-from IPython.display import clear_output
+import json
 
+with open('secret_data', 'r') as f:
+	secret_data = json.load(f)
+PROFITS = secret_data['PROFITS']
+CAN_GUESS_THRESHOLD = secret_data['CAN_GUESS_THRESHOLD']
 model = KeyedVectors.load_word2vec_format('model_prime.txt')
-PROFITS = {
-	'r': 1,
-	'b': -1.9,
-	'd': -1000,
-	'w': -0.9
-}
-
+MULTIPLY_EXP = secret_data['MULTIPLY_EXP']
 class Word:
 	def __init__(self):
 		self.word = ''
@@ -135,10 +133,9 @@ def find_candidates(field, marker='r'):
 	return result
 
 def scaling(x):
-	return exp(x * 2)
+	return exp(x * MULTIPLY_EXP)
 
 
-CAN_GUESS_THRESHOLD = 0.3
 def guess(field, word, top_n=-1):
 	pairs = []
 	random_word = Word('', 'random')
@@ -147,7 +144,7 @@ def guess(field, word, top_n=-1):
 		if item.used:
 			continue
 		val = scaling(model.similarity(word, item.word))
-		if val > CAN_GUESS_THRESHOLD:
+		if val > scaling(CAN_GUESS_THRESHOLD):
 			pairs.append((val, item))
 		else:
 			random_word.cnt += 1
@@ -158,7 +155,7 @@ def guess(field, word, top_n=-1):
 	if top_n != -1:
 		result = [(b, a) for a, b in sorted(pairs)[::-1]]
 		while len(result) < top_n:
-			result.append((random_word, scaling(CAN_GUESS_THRESHOLD - 0.1)))
+			result.append((random_word, scaling(CAN_GUESS_THRESHOLD)))
 		return result[:top_n]
 	else:
 		return pairs
@@ -181,16 +178,17 @@ def bruteforce(field, marker):
 		for word in candidates:
 			guessed = guess(field, word, number)
 			wordlist = [x for x, _ in guessed]
-			probs = [1 for _, x in guessed]
+			probs = [x for _, x in guessed]
 			all_moves.append((calc_profit(wordlist, marker, probs), (word, number), [x.word + '_' + x.marker for x in wordlist]))
 	return sorted(all_moves)[::-1]
 
 def do_move(field, forbidden, answers):
 	moves = bruteforce(field, 'r')
+	forb_set = {x[0] for x in forbidden}
 	for _, move, ans in moves:
-		if not move in forbidden:
+		if not move[0] in forb_set:
 			forbidden.append(move)
-			answers.append(ans)
+			answers.append((_, ans))
 			return move
 	return ('-', 1)
 
@@ -204,7 +202,8 @@ def do_clear(field, word):
 			continue
 		if w.word == word:
 			field.all[i].used = True
-			return
+			return True
+	return False
 
 def start_game():
 	field = Field()
