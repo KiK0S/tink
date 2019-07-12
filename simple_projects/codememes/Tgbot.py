@@ -28,7 +28,6 @@ class Game:
 		self.current_word = '-'
 
 	def make_move(self):
-		self.field_id = self.send(chat_id=self.id, text=self.field.print_without_markers(), parse_mode=telegram.ParseMode.HTML).message_id
 		move = do_move(self)
 		logging.info('{GAME = ' + str(self.chat_id) + ' MOVE = \n' + str(move) + '}')
 		self.send(chat_id=self.id, text=str(move))
@@ -67,7 +66,8 @@ class Game:
 					ptr += 1
 				result += '\n' + str(self.answers[i]) + '\n'
 			self.end()
-			self.send(chat_id=self.id, text=result)
+			if result != '':
+				self.send(chat_id=self.id, text=result)
 			logging.info('{GAME = ' + str(self.chat_id) + ' STATISTICS = \n' + result + '}')
 			self.send(chat_id=self.id, text='Thanks for the game :-)')
 			return False
@@ -107,8 +107,7 @@ def start(update, context):
 	logging.info('{GAME = ' + str(game.chat_id) + ' GUESSERS = \n' + str(game.guessers) + '}')
 	for user in game.captains:
 		context.bot.send_message(chat_id=user, text=game.field.print_with_markers())
-	if len(game.guessers) == 0:
-		game.field_id = game.send(chat_id=game.id, text=game.field.print_without_markers(), parse_mode=telegram.ParseMode.HTML).message_id
+	game.field_id = game.send(chat_id=game.id, text=game.field.print_without_markers(), parse_mode=telegram.ParseMode.HTML).message_id
 	game.play()
 	
 
