@@ -147,8 +147,8 @@ def query(wordlist):
 def find_candidates(field, marker='r'):
 	good_words = [x.word for x in field if x.marker == marker and x.used == False]
 	result = set()
-	for i in range(1, len(good_words)):
-		for lists in [query(_) for _ in list(itertools.combinations(good_words, i + 1))]:
+	for i in range(1, len(good_words) + 1):
+		for lists in [query(_) for _ in list(itertools.combinations(good_words, i))]:
 			for value in lists:
 				result.add(value[0])
 	return result

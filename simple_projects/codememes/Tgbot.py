@@ -35,11 +35,13 @@ class Game:
 		self.current_word = move[0]
 
 	def play(self):
+		need_to_reload = False
 		while True:
 			if len(self.guessers) == 0:
 				if self.left > 0:
 					self.reading_buffer.append(do_guess(self, self.current_word).word)
 					logging.info('{GAME = ' + str(self.chat_id) + ' AI_GUESS = \n' + self.reading_buffer[-1] + '}')
+					need_to_reload = True
 				else:
 					break
 			if len(self.reading_buffer) > 0:
@@ -49,6 +51,7 @@ class Game:
 				self.left -= 1
 				logging.info(self.reading_buffer)
 				logging.info(self.guesses)
+				need_to_reload = True
 				if do_clear(self, self.guesses[-1]):
 					self.edit(self.field.print_without_markers(), self.id, self.field_id, parse_mode=telegram.ParseMode.HTML)
 			if len(self.guessers) > 0:
@@ -74,8 +77,11 @@ class Game:
 		if self.left <= 0:
 			if len(self.captains) == 0:
 				self.make_move()
+				need_to_reload = True
 			else:
 				self.send(chat_id=self.id, text='waiting for captains')
+		if need_to_reload:
+			self.play()
 
 	def end(self):
 		self.status = 0
@@ -122,6 +128,7 @@ def echo(update, context):
 			try:
 				word, number = update.message.text.split()
 				number = int(number)
+				word = word.lower()
 				if game.left != 0:
 					logging.error(update.message.text, word, number)
 					raise Exception
