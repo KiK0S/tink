@@ -14,6 +14,7 @@ PROFITS = secret_data['PROFITS']
 CAN_GUESS_THRESHOLD = secret_data['CAN_GUESS_THRESHOLD']
 model = KeyedVectors.load_word2vec_format('model_prime.txt')
 MULTIPLY_EXP = secret_data['MULTIPLY_EXP']
+
 class Word:
 	def __init__(self):
 		self.word = ''
@@ -90,6 +91,19 @@ class Field:
 				ok_d = False
 		return (not ok_r) or (not ok_b) or (not ok_d)
 	
+	def print_without_markers(self):
+		res = ''
+		for s in self:
+			if s.used:
+				res += '<b>'
+			res += s.word
+			if s.used:
+				res += '_' + s.marker
+			if s.used:
+				res += '</b>'
+			res += '\n'
+		return res
+
 	def print_with_markers(self):
 		res = ''
 		for s in self:
@@ -101,6 +115,13 @@ class Field:
 		for s in self:
 			res += str(s) + '\n'
 		return res
+
+	def unused(self):
+		cnt = 0
+		for s in self:
+			if not s.used:
+				cnt += 1
+		return cnt
 
 def similar_list(wordlist):
 	if len(wordlist) == 0:
@@ -124,7 +145,7 @@ def query(wordlist):
 	return filtered_similars(wordlist)
 
 def find_candidates(field, marker='r'):
-	good_words = [x.word for x in field if x.marker == marker]
+	good_words = [x.word for x in field if x.marker == marker and x.used == False]
 	result = set()
 	for i in range(1, len(good_words)):
 		for lists in [query(_) for _ in list(itertools.combinations(good_words, i + 1))]:
@@ -144,7 +165,7 @@ def guess(field, word, top_n=-1):
 		if item.used:
 			continue
 		val = scaling(model.similarity(word, item.word))
-		if val > scaling(CAN_GUESS_THRESHOLD):
+		if val > scaling(CAN_GUESS_THRESHOLD) or top_n == -1:
 			pairs.append((val, item))
 		else:
 			random_word.cnt += 1
@@ -156,9 +177,9 @@ def guess(field, word, top_n=-1):
 		result = [(b, a) for a, b in sorted(pairs)[::-1]]
 		while len(result) < top_n:
 			result.append((random_word, scaling(CAN_GUESS_THRESHOLD)))
-		return result[:top_n]
+		return result
 	else:
-		return pairs
+		return sorted(pairs)[::-1]
 
 def calc_profit(wordlist, marker, coefficients):
 	result = 0
@@ -171,36 +192,43 @@ def calc_profit(wordlist, marker, coefficients):
 		current_iter += 1
 	return result
 
-def bruteforce(field, marker):
+def bruteforce(game, marker):
+	field = game.field
 	candidates = find_candidates(field, marker)
+	logging.info('{GAME = ' + str(game.chat_id) + ' CANDIDATES = \n' + str(candidates) + '}')
 	all_moves = []
-	for number in range(1, len(field) + 1):
+	for number in range(1, field.unused() + 1):
 		for word in candidates:
 			guessed = guess(field, word, number)
+			logging.debug('{GAME = ' + str(game.chat_id) + ' TRY_MOVE = \n' + str(field) + ' ' + str(word) + ' ' + str(number) + '}')
+			logging.debug('{GAME = ' + str(game.chat_id) + ' GUESSED = \n' + str(guessed) + '}')
 			wordlist = [x for x, _ in guessed]
 			probs = [x for _, x in guessed]
-			all_moves.append((calc_profit(wordlist, marker, probs), (word, number), [x.word + '_' + x.marker for x in wordlist]))
-	return sorted(all_moves)[::-1]
+			all_moves.append((calc_profit(wordlist[:number], marker, probs[:number]), (word, number), [x.word + '_' + x.marker for x in wordlist]))
+	return sorted(all_moves)[::-1][:game.field.n]
 
-def do_move(field, forbidden, answers):
-	moves = bruteforce(field, 'r')
-	forb_set = {x[0] for x in forbidden}
+def do_move(game):
+	moves = bruteforce(game, 'r')
+	logging.info('{GAME = ' + str(game.chat_id) + ' POSSIBLE_MOVES = \n' + str(moves) + '}')
+	forb_set = {x[0] for x in game.moves}
 	for _, move, ans in moves:
 		if not move[0] in forb_set:
-			forbidden.append(move)
-			answers.append((_, ans))
+			game.moves.append(move)
+			game.answers.append((_, ans))
 			return move
 	return ('-', 1)
 
-def do_guess(field, word):
-	sorted_list = guess(field, word)
+def do_guess(game, word):
+	sorted_list = guess(game.field, word)
 	return sorted_list[0][1]
 
-def do_clear(field, word):
+def do_clear(game, word):
+	field = game.field
 	for i, w in enumerate(field):
 		if w.used:
 			continue
 		if w.word == word:
+			logging.info('{GAME = ' + str(game.chat_id) + ' FOUND = \n' + str(w) + '}')
 			field.all[i].used = True
 			return True
 	return False
