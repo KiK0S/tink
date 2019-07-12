@@ -105,6 +105,12 @@ def init(update, context):
 
 
 def start(update, context):
+	if not update.message.chat_id in all_games:
+		context.bot.send_message(chat_id=update.message.chat_id, text='First set the game up using /init')
+		return
+	if all_games[update.message.chat_id].status:
+		context.bot.send_message(chat_id=update.message.chat_id, text='First set the game up using /init')
+		return
 	context.bot.send_message(chat_id=update.message.chat_id, text='Hi!\nLet\'s start our game. We play 1-person Codenames, you are the guesser. Type the word when I will ask you. If you want to skip word, use "-". Remember I\'m bad at typo mistakes, don\'t do them. \nGood Luck!')
 	game = all_games[update.message.chat_id]
 	game.status = 1
@@ -118,6 +124,9 @@ def start(update, context):
 	
 
 def echo(update, context):
+	if not update.message.chat_id in all_games:
+		context.bot.send_message(chat_id=update.message.chat_id, text='First set the game up using /init')
+		return
 	game = all_games[update.message.chat_id]
 	if game.status == 0:
 		context.bot.send_message(chat_id=update.message.chat_id, text='Please start new game')
@@ -155,6 +164,9 @@ def setup(update, context):
 		json.dump(secret_data, f)
 
 def captain(update, context):
+	if not update.message.chat_id in all_games:
+		context.bot.send_message(chat_id=update.message.chat_id, text='First set the game up using /init')
+		return
 	game = all_games[update.message.chat_id]
 	game.captains.append(update.message.from_user.id)
 	if update.message.from_user.id in game.guessers:
@@ -162,6 +174,9 @@ def captain(update, context):
 	context.bot.send_message(chat_id=update.message.chat_id, text='OK wrote ' + str(update.message.from_user.username) + ' as captain')
 
 def guesser(update, context):
+	if not update.message.chat_id in all_games:
+		context.bot.send_message(chat_id=update.message.chat_id, text='First set the game up using /init')
+		return
 	game = all_games[update.message.chat_id]
 	game.guessers.append(update.message.from_user.id)
 	if update.message.from_user.id in game.captains:
