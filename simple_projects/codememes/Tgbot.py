@@ -95,7 +95,7 @@ class Game:
 		self.reading_buffer = []
 		self.left = 0
 		self.current_word = '-'
-		logging.info('{GAME = ' + str(game.chat_id) + ' END}')
+		logging.info('{GAME = ' + str(self.chat_id) + ' END}')
 
 all_games = {}
 
