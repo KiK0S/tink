@@ -95,6 +95,7 @@ class Game:
 		self.reading_buffer = []
 		self.left = 0
 		self.current_word = '-'
+		logging.info('{GAME = ' + str(game.chat_id) + ' END}')
 
 all_games = {}
 
@@ -102,6 +103,7 @@ def init(update, context):
 	game = Game(update.message.chat_id, context.bot.send_message, context.bot.edit_message_text)
 	all_games[update.message.chat_id] = game
 	context.bot.send_message(chat_id=update.message.chat_id, text='Hi!')
+	
 
 
 def start(update, context):
@@ -153,7 +155,7 @@ def setup(update, context):
 	if s.split()[0] == 'T':
 		CAN_GUESS_THRESHOLD = float(s.split()[1])
 		secret_data['CAN_GUESS_THRESHOLD'] = CAN_GUESS_THRESHOLD
-	elif s.split[0] == 'M':
+	elif s.split()[0] == 'M':
 		MULTIPLY_EXP = float(s.split()[1]) 
 		secret_data['MULTIPLY_EXP'] = CAN_GUESS_THRESHOLD
 	else:
