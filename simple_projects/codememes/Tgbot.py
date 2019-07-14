@@ -102,16 +102,14 @@ all_games = {}
 def init(update, context):
 	game = Game(update.message.chat_id, context.bot.send_message, context.bot.edit_message_text)
 	all_games[update.message.chat_id] = game
-	context.bot.send_message(chat_id=update.message.chat_id, text='Hi!')
-	
-
+	context.bot.send_message(chat_id=update.message.chat_id, text='Hi!\n Choose your role using /captain or /guesser.')
 
 def start(update, context):
 	if not update.message.chat_id in all_games:
 		context.bot.send_message(chat_id=update.message.chat_id, text='First set the game up using /init')
 		return
 	if all_games[update.message.chat_id].status:
-		context.bot.send_message(chat_id=update.message.chat_id, text='First set the game up using /init')
+		context.bot.send_message(chat_id=update.message.chat_id, text='First end previous game or set the new game up using /init')
 		return
 	context.bot.send_message(chat_id=update.message.chat_id, text='Hi!\nLet\'s start our game. We play 1-person Codenames, you are the guesser. Type the word when I will ask you. If you want to skip word, use "-". Remember I\'m bad at typo mistakes, don\'t do them. \nGood Luck!')
 	game = all_games[update.message.chat_id]
