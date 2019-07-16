@@ -9,7 +9,7 @@ from Model import *
 class Game:
 	def __init__(self):
 		pass
-	def __init__(self, id, send, edit):
+	def __init__(self, id, send, edit, edit_markup):
 		self.id = id
 		self.chat_id = id
 		self.field = Field()
@@ -20,9 +20,11 @@ class Game:
 		self.reading_buffer = []
 		self.send = send
 		self.edit = edit
+		self.edit_markup = edit_markup
 		self.left = 0
 		self.status = 0
 		self.field_id = 0
+		self.move_id = 0
 		self.guessers = []
 		self.captains = []
 		self.current_word = '-'
@@ -30,9 +32,9 @@ class Game:
 	def make_move(self):
 		move = do_move(self)
 		logging.info('{GAME = ' + str(self.chat_id) + ' MOVE = \n' + str(move) + '}')
-		self.send(chat_id=self.id, text=str(move))
-		self.left = move[1]
-		self.current_word = move[0]
+		self.edit(str(move), self.id, self.move_id)
+		self.left = int(move[1])
+		self.current_word = ''.join(str(move[0]))
 
 	def play(self):
 		need_to_reload = False
@@ -48,12 +50,13 @@ class Game:
 				self.guesses.append(self.reading_buffer[-1])
 				logging.info('{GAME = ' + str(self.chat_id) + ' GUESS = \n' + str(self.guesses[-1]) + '}')
 				self.reading_buffer.pop()
-				self.left -= 1
 				logging.info(self.reading_buffer)
 				logging.info(self.guesses)
 				need_to_reload = True
 				if do_clear(self, self.guesses[-1]):
-					self.edit(self.field.print_without_markers(), self.id, self.field_id, parse_mode=ParseMode.HTML)
+					self.left -= 1
+					self.edit(str((self.current_word, self.left)), self.id, self.move_id)
+					self.edit_markup(chat_id=self.id, message_id=self.field_id, reply_markup=get_markup(self))
 			if len(self.guessers) > 0:
 				break
 		if self.field.game_over():
@@ -76,6 +79,10 @@ class Game:
 			return False
 		if self.left <= 0:
 			if len(self.captains) == 0:
+				try:
+					self.edit('Please wait for AI to move', self.id, self.move_id)
+				except:
+					pass
 				self.make_move()
 				need_to_reload = True
 			else:
@@ -95,14 +102,31 @@ class Game:
 		self.reading_buffer = []
 		self.left = 0
 		self.current_word = '-'
+		self.move_id = 0
 		logging.info('{GAME = ' + str(self.chat_id) + ' END}')
 
 all_games = {}
 
 def init(update, context):
-	game = Game(update.message.chat_id, context.bot.send_message, context.bot.edit_message_text)
+	game = Game(update.message.chat_id, context.bot.send_message, context.bot.edit_message_text, context.bot.edit_message_reply_markup)
 	all_games[update.message.chat_id] = game
 	context.bot.send_message(chat_id=update.message.chat_id, text='Hi!\n Choose your role using /captain or /guesser.')
+
+
+def get_markup(game):
+	menu = []
+	words = [str(x) for x in game.field.all] + ['-']
+	ptr = 0
+	for i in range(game.field.n // 5 + 1):
+		buttons = []
+		for j in range(5):
+			if ptr < len(words):
+				buttons.append(InlineKeyboardButton(words[ptr], callback_data=str(ptr)))
+			ptr += 1
+		menu.append(buttons)
+	keyboard_markup = InlineKeyboardMarkup(menu)
+	return keyboard_markup
+	
 
 def start(update, context):
 	if not update.message.chat_id in all_games:
@@ -111,15 +135,20 @@ def start(update, context):
 	if all_games[update.message.chat_id].status:
 		context.bot.send_message(chat_id=update.message.chat_id, text='First end previous game or set the new game up using /init')
 		return
-	context.bot.send_message(chat_id=update.message.chat_id, text='Hi!\nLet\'s start our game. We play 1-person Codenames, you are the guesser. Type the word when I will ask you. If you want to skip word, use "-". Remember I\'m bad at typo mistakes, don\'t do them. \nGood Luck!')
 	game = all_games[update.message.chat_id]
+	if len(game.captains) + len(game.guessers) == 0:
+		context.bot.send_message(chat_id=update.message.chat_id, text='No players. Use /captain or /guesser')
+		return
+	context.bot.send_message(chat_id=update.message.chat_id, text='Hi!\nLet\'s start our game. We play 1-person Codenames, you are the guesser. Type the word when I will ask you. If you want to skip word, use "-". Remember I\'m bad at typo mistakes, don\'t do them. \nGood Luck!')
 	game.status = 1
 	logging.info('{GAME = ' + str(game.chat_id) + ' NEW_FIELD = \n' + game.field.print_with_markers() + '}')
 	logging.info('{GAME = ' + str(game.chat_id) + ' CAPTAINS = \n' + str(game.captains) + '}')
 	logging.info('{GAME = ' + str(game.chat_id) + ' GUESSERS = \n' + str(game.guessers) + '}')
 	for user in game.captains:
 		context.bot.send_message(chat_id=user, text=game.field.print_with_markers())
-	game.field_id = game.send(chat_id=game.id, text=game.field.print_without_markers(), parse_mode=ParseMode.HTML).message_id
+	game.field_id = game.send(chat_id=game.id, text='Let\'s start the game!', reply_markup=get_markup(game)).message_id
+	if len(game.captains) == 0:
+		game.move_id = game.send(chat_id=game.id, text='Please wait for AI to move').message_id
 	game.play()
 	
 
@@ -183,27 +212,12 @@ def guesser(update, context):
 		game.captains.remove(update.message.from_user.id)
 	context.bot.send_message(chat_id=update.message.chat_id, text='OK wrote ' + str(update.message.from_user.username) + ' as guesser')
 
-def button_field(update, context):
-	if not update.message.chat_id in all_games:
-		context.bot.send_message(chat_id=update.message.chat_id, text='First set the game up using /init')
-		return
-	game = all_games[update.message.chat_id]
-	menu = []
-	words = [x.word for x in game.field.all]
-	ptr = 0
-	for i in range(game.field.n // 5):
-		buttons = []
-		for j in range(5):
-			buttons.append(InlineKeyboardButton(words[ptr], callback_data=str(update.message.from_user.id) + ' ' + str(ptr)))
-			ptr += 1
-		menu.append(buttons)
-	keyboard_markup = InlineKeyboardMarkup(menu)
-	context.bot.send_message(update.message.chat_id, 'kek', reply_markup=keyboard_markup)
-
 def tik(update, context):
-	game = all_games[update.effective_chat.id]		
-	user, word = update.callback_query.data.split()
-	logging.info('{GAME = ' + str(game.chat_id) + ' (user, word) = \n' + user + ' ' + word + '}')
+	game = all_games[update.effective_chat.id]
+	if not update.effective_user.id in game.guessers:
+		return	
+	word = update.callback_query.data
+	logging.info('{GAME = ' + str(game.chat_id) + ' USER_TRY = \n' + game.field.all[int(word)].word + '}')
 	game.reading_buffer.append(game.field.all[int(word)].word)
 	game.play()
 
@@ -218,7 +232,6 @@ def main():
 	dp.add_handler(CommandHandler("captain", captain))
 	dp.add_handler(CommandHandler("guesser", guesser))
 	dp.add_handler(CommandHandler("init", init))
-	dp.add_handler(CommandHandler("bf", button_field))
 	dp.add_handler(CallbackQueryHandler(tik))
 	dp.add_handler(MessageHandler(Filters.text, echo))
 	updater.start_polling()
