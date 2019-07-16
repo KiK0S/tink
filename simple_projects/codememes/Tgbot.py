@@ -1,7 +1,7 @@
 import logging
 import json
-import telegram
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from telegram import *
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
 logging.basicConfig(format = u'[%(filename)s{LINE:%(lineno)d}# %(levelname)-8s [%(asctime)s]  %(message)s]', level=logging.INFO, filename = u'bot.log')
 from Model import *
 
@@ -53,7 +53,7 @@ class Game:
 				logging.info(self.guesses)
 				need_to_reload = True
 				if do_clear(self, self.guesses[-1]):
-					self.edit(self.field.print_without_markers(), self.id, self.field_id, parse_mode=telegram.ParseMode.HTML)
+					self.edit(self.field.print_without_markers(), self.id, self.field_id, parse_mode=ParseMode.HTML)
 			if len(self.guessers) > 0:
 				break
 		if self.field.game_over():
@@ -119,7 +119,7 @@ def start(update, context):
 	logging.info('{GAME = ' + str(game.chat_id) + ' GUESSERS = \n' + str(game.guessers) + '}')
 	for user in game.captains:
 		context.bot.send_message(chat_id=user, text=game.field.print_with_markers())
-	game.field_id = game.send(chat_id=game.id, text=game.field.print_without_markers(), parse_mode=telegram.ParseMode.HTML).message_id
+	game.field_id = game.send(chat_id=game.id, text=game.field.print_without_markers(), parse_mode=ParseMode.HTML).message_id
 	game.play()
 	
 
@@ -183,6 +183,30 @@ def guesser(update, context):
 		game.captains.remove(update.message.from_user.id)
 	context.bot.send_message(chat_id=update.message.chat_id, text='OK wrote ' + str(update.message.from_user.username) + ' as guesser')
 
+def button_field(update, context):
+	if not update.message.chat_id in all_games:
+		context.bot.send_message(chat_id=update.message.chat_id, text='First set the game up using /init')
+		return
+	game = all_games[update.message.chat_id]
+	menu = []
+	words = [x.word for x in game.field.all]
+	ptr = 0
+	for i in range(game.field.n // 5):
+		buttons = []
+		for j in range(5):
+			buttons.append(InlineKeyboardButton(words[ptr], callback_data=str(update.message.from_user.id) + ' ' + str(ptr)))
+			ptr += 1
+		menu.append(buttons)
+	keyboard_markup = InlineKeyboardMarkup(menu)
+	context.bot.send_message(update.message.chat_id, 'kek', reply_markup=keyboard_markup)
+
+def tik(update, context):
+	game = all_games[update.effective_chat.id]		
+	user, word = update.callback_query.data.split()
+	logging.info('{GAME = ' + str(game.chat_id) + ' (user, word) = \n' + user + ' ' + word + '}')
+	game.reading_buffer.append(game.field.all[int(word)].word)
+	game.play()
+
 def main():
 	REQUEST_KWARGS={
 		'proxy_url': 'http://' + secret_data['proxy_ip'] + ':' + secret_data['proxy_port'],
@@ -194,6 +218,8 @@ def main():
 	dp.add_handler(CommandHandler("captain", captain))
 	dp.add_handler(CommandHandler("guesser", guesser))
 	dp.add_handler(CommandHandler("init", init))
+	dp.add_handler(CommandHandler("bf", button_field))
+	dp.add_handler(CallbackQueryHandler(tik))
 	dp.add_handler(MessageHandler(Filters.text, echo))
 	updater.start_polling()
 	updater.idle()
