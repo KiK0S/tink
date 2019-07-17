@@ -87,7 +87,8 @@ class Game:
 				self.make_move()
 				need_to_reload = True
 			else:
-				self.send(chat_id=self.id, text='waiting for captains')
+				if not need_to_reload:
+					self.send(chat_id=self.id, text='waiting for captains')
 		if need_to_reload:
 			self.play()
 
@@ -111,7 +112,7 @@ all_games = {}
 def init(update, context):
 	game = Game(update.message.chat_id, context.bot.send_message, context.bot.edit_message_text, context.bot.edit_message_reply_markup)
 	all_games[update.message.chat_id] = game
-	context.bot.send_message(chat_id=update.message.chat_id, text='Hi!\n Choose your role using /captain or /guesser.')
+	context.bot.send_message(chat_id=update.message.chat_id, text='Hi!\n Choose your role using /captain or /guesser.', reply_markup=InlineKeyboardMarkup([InlineKeyboardButton('guesser', callback_data='guesser'), InlineKeyboardButton('captain', callback_data='captain')]))
 
 
 def get_markup(game):
@@ -175,7 +176,7 @@ def echo(update, context):
 				context.bot.send_message(chat_id=update.message.chat_id, text='write smth ok please')
 			game.left = number
 			game.current_word = word
-			context.bot.send_message(chat_id=update.message.chat_id, text=word + '; ' + str(number))
+			game.move_id = context.bot.send_message(chat_id=update.message.chat_id, text=str((word, number))).message_id
 		game.play()
 
 def setup(update, context):
@@ -214,10 +215,16 @@ def guesser(update, context):
 	context.bot.send_message(chat_id=update.message.chat_id, text='OK wrote ' + str(update.message.from_user.username) + ' as guesser')
 
 def tik(update, context):
+	word = update.callback_query.data
+	if word == 'guesser':
+		guesser(update, context)
+		return
+	if word == 'captain':
+		captain(update, context)
+		return
 	game = all_games[update.effective_chat.id]
 	if not update.effective_user.id in game.guessers:
 		return	
-	word = update.callback_query.data
 	logging.info('{GAME = ' + str(game.chat_id) + ' USER_TRY = \n' + game.field.all[int(word)].word + '}')
 	game.reading_buffer.append(game.field.all[int(word)].word)
 	game.play()
