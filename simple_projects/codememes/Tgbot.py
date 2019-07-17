@@ -55,7 +55,8 @@ class Game:
 				need_to_reload = True
 				if do_clear(self, self.guesses[-1]):
 					self.left -= 1
-					self.edit(str((self.current_word, self.left)), self.id, self.move_id)
+					if self.move_id != 0:
+						self.edit(str((self.current_word, self.left)), self.id, self.move_id)
 					self.edit_markup(chat_id=self.id, message_id=self.field_id, reply_markup=get_markup(self))
 			if len(self.guessers) > 0:
 				break
