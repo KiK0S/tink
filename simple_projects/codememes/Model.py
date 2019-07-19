@@ -7,6 +7,7 @@ from sklearn.utils.extmath import softmax
 from gensim.models.keyedvectors import KeyedVectors
 from Levenshtein import distance as levenshtein_distance
 import json
+import emoji
 
 with open('secret_data', 'r') as f:
 	secret_data = json.load(f)
@@ -14,6 +15,18 @@ PROFITS = secret_data['PROFITS']
 CAN_GUESS_THRESHOLD = secret_data['CAN_GUESS_THRESHOLD']
 model = KeyedVectors.load_word2vec_format('model_prime.txt')
 MULTIPLY_EXP = secret_data['MULTIPLY_EXP']
+
+def get_emoji(s):
+	if s == 'r':
+		return emoji.emojize(':red_circle:')
+
+	if s == 'w':
+		return emoji.emojize(':white_circle:')
+
+	if s == 'b':
+		return emoji.emojize(':blue_circle:')
+	if s == 'd':
+		return emoji.emojize(':black_circle:')
 
 class Word:
 	def __init__(self):
@@ -28,7 +41,7 @@ class Word:
 	
 	def __repr__(self):
 		if self.used:
-			return self.word + '_' + self.marker
+			return self.word + get_emoji(self.marker)
 		return self.word
 	
 	def make_random(self):

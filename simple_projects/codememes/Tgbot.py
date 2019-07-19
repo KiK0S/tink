@@ -112,16 +112,15 @@ all_games = {}
 def init(update, context):
 	game = Game(update.message.chat_id, context.bot.send_message, context.bot.edit_message_text, context.bot.edit_message_reply_markup)
 	all_games[update.message.chat_id] = game
-	context.bot.send_message(chat_id=update.message.chat_id, text='Hi!\n Choose your role using /captain or /guesser.', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('guesser', callback_data='guesser'), InlineKeyboardButton('captain', callback_data='captain')]]))
-
+	context.bot.send_message(chat_id=update.message.chat_id, text='Hi!\n Choose your role using /guesser or /captain.', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('guesser', callback_data='guesser'), InlineKeyboardButton('captain', callback_data='captain')]]))
 
 def get_markup(game):
 	menu = []
 	words = [str(x) for x in game.field.all] + ['-']
 	ptr = 0
-	for i in range(game.field.n // 5 + 1):
+	for i in range(game.field.n // 3 + 1):
 		buttons = []
-		for j in range(5):
+		for j in range(3):
 			if ptr < len(words):
 				buttons.append(InlineKeyboardButton(words[ptr], callback_data=str(ptr)))
 			ptr += 1
@@ -210,6 +209,12 @@ def captain(update, context):
 		game.guessers.remove(update.message.from_user.id)
 	context.bot.send_message(chat_id=update.message.chat_id, text='OK wrote ' + str(update.message.from_user.username) + ' as captain')
 
+def captain_callback(update, context, game):
+	game.captains.append(update.message.effective_user.id)
+	if update.effective_user.id in game.guessers:
+		game.guessers.remove(update.effective_user.id)
+	context.bot.send_message(chat_id=game.chat_id, text='OK wrote ' + str(update.effective_user.username) + ' as captain')
+
 def guesser(update, context):
 	try:
 		if not update.message.chat_id in all_games:
@@ -223,15 +228,21 @@ def guesser(update, context):
 		game.captains.remove(update.message.from_user.id)
 	context.bot.send_message(chat_id=update.message.chat_id, text='OK wrote ' + str(update.message.from_user.username) + ' as guesser')
 
+def guesser_callback(update, context, game):
+	game.guessers.append(update.effective_user.id)
+	if update.effective_user.id in game.captains:
+		game.captains.remove(update.effective_user.id)
+	context.bot.send_message(chat_id=game.chat_id, text='OK wrote ' + str(update.effective_user.username) + ' as guesser')
+
 def tik(update, context):
 	word = update.callback_query.data
+	game = all_games[update.effective_chat.id]
 	if word == 'guesser':
-		guesser(update, context)
+		guesser_callback(update, context, game)
 		return
 	if word == 'captain':
-		captain(update, context)
+		captain_callback(update, context, game)
 		return
-	game = all_games[update.effective_chat.id]
 	if not update.effective_user.id in game.guessers:
 		return	
 	logging.info('{GAME = ' + str(game.chat_id) + ' USER_TRY = \n' + game.field.all[int(word)].word + '}')
