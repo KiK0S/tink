@@ -221,7 +221,11 @@ def bruteforce(game, marker):
 	return sorted(all_moves)[::-1][:game.field.n]
 
 def do_move(game):
-	moves = bruteforce(game, 'r')
+	if game.current_move == 'b':
+		PROFITS['b'], PROFITS['r'] = PROFITS['r'], PROFITS['b']
+	moves = bruteforce(game, game.current_move)
+	if game.current_move == 'b':
+		PROFITS['b'], PROFITS['r'] = PROFITS['r'], PROFITS['b']
 	logging.info('{GAME = ' + str(game.chat_id) + ' POSSIBLE_MOVES = \n' + str(moves) + '}')
 	forb_set = {x[0] for x in game.moves}
 	for _, move, ans in moves:
