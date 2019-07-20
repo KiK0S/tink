@@ -142,26 +142,26 @@ def similar_list(wordlist):
 	return model.most_similar(positive=wordlist)
 
 LEVENSHTEIN_THRESHOLD = 4
-def filtered_similars(wordlist):
+def filtered_similars(wordlist, forbidden):
 	unfiltered = similar_list(wordlist)
 	result = []
 	for s, dist in unfiltered:
 		ok = True
-		for parent in wordlist:
+		for parent in forbidden:
 			if levenshtein_distance(parent, s) <= LEVENSHTEIN_THRESHOLD or parent in s:
 				ok = False
 		if ok:
 			result.append((s, dist))
 	return result
 
-def query(wordlist):
-	return filtered_similars(wordlist)
+def query(wordlist, forbidden):
+	return filtered_similars(wordlist, forbidden)
 
 def find_candidates(field, marker='r'):
 	good_words = [x.word for x in field if x.marker == marker and x.used == False]
 	result = set()
 	for i in range(1, len(good_words) + 1):
-		for lists in [query(_) for _ in list(itertools.combinations(good_words, i))]:
+		for lists in [query(_, [x.word for x in field]) for _ in list(itertools.combinations(good_words, i))]:
 			for value in lists:
 				result.add(value[0])
 	return result
@@ -174,25 +174,34 @@ def guess(field, word, top_n=-1):
 	pairs = []
 	random_word = Word('', 'random')
 	random_word.make_random()
-	for item in field:
-		if item.used:
-			continue
-		val = scaling(model.similarity(word, item.word))
-		if val > scaling(CAN_GUESS_THRESHOLD) or top_n == -1:
-			pairs.append((val, item))
+	try:
+		for item in field:
+			if item.used:
+				continue
+			val = scaling(model.similarity(word, item.word))
+			if val > scaling(CAN_GUESS_THRESHOLD) or top_n == -1:
+				pairs.append((val, item))
+			else:
+				random_word.cnt += 1
+				if not item.marker in random_word.dict:
+					random_word.dict[item.marker] = 0
+				random_word.dict[item.marker] += 1
+		random_word.calc_profit()
+		if top_n != -1:
+			result = [(b, a) for a, b in sorted(pairs)[::-1]]
+			while len(result) < top_n:
+				result.append((random_word, scaling(CAN_GUESS_THRESHOLD)))
+			return result
 		else:
-			random_word.cnt += 1
-			if not item.marker in random_word.dict:
-				random_word.dict[item.marker] = 0
-			random_word.dict[item.marker] += 1
-	random_word.calc_profit()
-	if top_n != -1:
-		result = [(b, a) for a, b in sorted(pairs)[::-1]]
-		while len(result) < top_n:
-			result.append((random_word, scaling(CAN_GUESS_THRESHOLD)))
-		return result
-	else:
-		return sorted(pairs)[::-1]
+			return sorted(pairs)[::-1]
+	except:
+		pairs = []
+		for item in field:
+			if item.used:
+				continue
+			pairs.append(item)
+		random.shuffle(pairs)
+		return pairs
 
 def calc_profit(wordlist, marker, coefficients):
 	result = 0

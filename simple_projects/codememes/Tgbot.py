@@ -151,7 +151,7 @@ def roles(update, context):
 	if game.mode == 1:
 		context.bot.send_message(chat_id=update.effective_chat.id, text='Choose your role using. When it\'s over, use /start', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('guesser', callback_data='guesser'), InlineKeyboardButton('captain', callback_data='captain')]]))
 	else:
-		context.bot.send_message(chat_id=update.effective_chat.id, text='Choose your role&team. When it\'s over, use /start', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('captain' + get_emoji('r'), callback_data='captain' + get_emoji('r')), InlineKeyboardButton('captain' + get_emoji('b'), callback_data='captain' + get_emoji('b'))], [InlineKeyboardButton('guesser' + get_emoji('r'), callback_data='guesser' + get_emoji('r')), InlineKeyboardButton('guesser' + get_emoji('b'), callback_data='guesser' + get_emoji('b'))]]))
+		context.bot.send_message(chat_id=update.effective_chat.id, text='Choose your role&team. When it\'s over, use /start', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('captain' + get_emoji('r'), callback_data='captain' + get_emoji('r')), InlineKeyboardButton('captain' + get_emoji('b'), callback_data='captain' + get_emoji('b'))], [InlineKeyboardButton('guesser' + get_emoji('r'), callback_data='guesser' + get_emoji('b')), InlineKeyboardButton('guesser' + get_emoji('b'), callback_data='guesser' + get_emoji('r'))]]))
 
 def get_markup(game):
 	menu = []
@@ -179,7 +179,6 @@ def start(update, context):
 	if len(game.captains) + len(game.guessers) == 0:
 		context.bot.send_message(chat_id=update.message.chat_id, text='No players. Use /captain or /guesser')
 		return
-	context.bot.send_message(chat_id=update.message.chat_id, text='Hi!\nLet\'s start our game. We play 1-person Codenames, you are the guesser. Type the word when I will ask you. If you want to skip word, use "-". Remember I\'m bad at typo mistakes, don\'t do them. \nGood Luck!')
 	game.status = 1
 	logging.info('{GAME = ' + str(game.chat_id) + ' NEW_FIELD = \n' + game.field.print_with_markers() + '}')
 	logging.info('{GAME = ' + str(game.chat_id) + ' CAPTAINS = \n' + str(game.captains) + '}')
@@ -218,6 +217,7 @@ def echo(update, context):
 				pass
 			game.left = number
 			game.current_word = word
+			game.answers += ['_user_'] * game.left 
 			game.edit(str((word, number)), game.id, game.move_id)
 		game.play()
 
@@ -267,10 +267,10 @@ def tik(update, context):
 		game.red_guesser = True
 	if word == 'guesser' + get_emoji('b'):
 		game.blue_guesser = True
-	if word == 'guesser':
+	if word.startswith('guesser'):
 		guesser_callback(update, context, game)
 		return
-	if word == 'captain':
+	if word.startswith('captain'):
 		captain_callback(update, context, game)
 		return
 	if not update.effective_user.id in game.guessers:
