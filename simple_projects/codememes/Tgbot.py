@@ -32,7 +32,8 @@ class Game:
 		self.blue_captain = False
 		self.red_guesser = False
 		self.blue_guesser = False
-		self.current_move = 'r'
+		self.current_move = 'b'
+		self.current_turn = 'c'
 		self.current_word = '-'
 
 	def make_move(self):
@@ -67,7 +68,12 @@ class Game:
 				self.left -= 1
 				if self.move_id != 0:
 					self.edit(str((self.current_word, self.left)), self.id, self.move_id)
-				self.edit_markup(chat_id=self.id, message_id=self.field_id, reply_markup=get_markup(self))
+				try:
+					self.edit('Let\'s start the game!\nCurrent move — ' + get_emoji(self.current_move), self.id, self.field_id)
+					self.edit_markup(chat_id=self.id, message_id=self.field_id, reply_markup=get_markup(self))
+				except:
+					pass
+
 		if self.field.game_over():
 			self.send(chat_id=self.id, text=self.field.print_with_markers())
 			ptr = 0
@@ -87,6 +93,17 @@ class Game:
 			self.send(chat_id=self.id, text='Thanks for the game :-)')
 			return False
 		if self.left <= 0 and len(self.reading_buffer) == 0:
+			self.current_turn = 'c'
+			if self.mode == 2:
+				if self.current_move == 'r':
+					self.current_move = 'b'
+				else:
+					self.current_move = 'r'
+				try:
+					self.edit('Let\'s start the game!\nCurrent move — ' + get_emoji(self.current_move), self.id, self.field_id)
+				except:
+					pass
+		if self.current_turn == 'c':
 			if self.mode == 1:
 				if len(self.captains) == 0:
 					try:
@@ -94,6 +111,7 @@ class Game:
 					except:
 						pass
 					self.make_move()
+					self.current_turn = 'g'
 					need_to_reload = True
 				else:
 					if not need_to_reload:
@@ -105,18 +123,11 @@ class Game:
 					except:
 						pass
 					self.make_move()
-					if self.current_move == 'r':
-						self.current_move = 'b'
-					else:
-						self.current_move = 'r'
+					self.current_turn = 'g'
 					need_to_reload = True
 				else:
 					if not need_to_reload:
 						self.edit('waiting for captains', self.id, self.move_id)
-						if self.current_move == 'r':
-							self.current_move = 'b'
-						else:
-							self.current_move = 'r'
 		if need_to_reload:
 			self.play()
 
@@ -149,9 +160,9 @@ def init(update, context):
 def roles(update, context):
 	game = all_games[update.effective_chat.id]
 	if game.mode == 1:
-		context.bot.send_message(chat_id=update.effective_chat.id, text='Choose your role using. When it\'s over, use /start', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('guesser', callback_data='guesser'), InlineKeyboardButton('captain', callback_data='captain')]]))
+		context.bot.send_message(chat_id=update.effective_chat.id, text='Choose your role. When it\'s over, use /start', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('guesser', callback_data='guesser'), InlineKeyboardButton('captain', callback_data='captain')]]))
 	else:
-		context.bot.send_message(chat_id=update.effective_chat.id, text='Choose your role&team. When it\'s over, use /start', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('captain' + get_emoji('r'), callback_data='captain' + get_emoji('r')), InlineKeyboardButton('captain' + get_emoji('b'), callback_data='captain' + get_emoji('b'))], [InlineKeyboardButton('guesser' + get_emoji('r'), callback_data='guesser' + get_emoji('b')), InlineKeyboardButton('guesser' + get_emoji('b'), callback_data='guesser' + get_emoji('r'))]]))
+		context.bot.send_message(chat_id=update.effective_chat.id, text='Choose your role&team. When it\'s over, use /start', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('captain' + get_emoji('r'), callback_data='captain' + get_emoji('r')), InlineKeyboardButton('captain' + get_emoji('b'), callback_data='captain' + get_emoji('b'))], [InlineKeyboardButton('guesser' + get_emoji('r'), callback_data='guesser' + get_emoji('r')), InlineKeyboardButton('guesser' + get_emoji('b'), callback_data='guesser' + get_emoji('b'))]]))
 
 def get_markup(game):
 	menu = []
@@ -185,7 +196,7 @@ def start(update, context):
 	logging.info('{GAME = ' + str(game.chat_id) + ' GUESSERS = \n' + str(game.guessers) + '}')
 	for user in game.captains:
 		context.bot.send_message(chat_id=user, text=game.field.print_with_markers())
-	game.field_id = game.send(chat_id=game.id, text='Let\'s start the game!', reply_markup=get_markup(game)).message_id
+	game.field_id = game.send(chat_id=game.id, text='Let\'s start the game!\nCurrent move — ' + get_emoji(game.current_move), reply_markup=get_markup(game)).message_id
 	if len(game.captains) == 0:
 		game.move_id = game.send(chat_id=game.id, text='Please wait for AI to move').message_id
 	else:
@@ -217,9 +228,11 @@ def echo(update, context):
 				pass
 			game.left = number
 			game.current_word = word
-			game.answers += ['_user_'] * game.left
+			game.answers += [['_user_'] * game.left]
 			game.moves.append((word, number))
+			game.current_turn = 'g'
 			game.edit(str((word, number)), game.id, game.move_id)
+			game.edit('Let\'s start the game!\nCurrent move — ' + get_emoji(game.current_move), game.id, game.field_id)
 		game.play()
 
 def setup(update, context):
@@ -237,17 +250,17 @@ def setup(update, context):
 	with open('secret_data', 'w') as f:
 		json.dump(secret_data, f)
 
-def captain_callback(update, context, game):
+def captain_callback(update, context, game, role):
 	game.captains.append(update.effective_user.id)
 	if update.effective_user.id in game.guessers:
 		game.guessers.remove(update.effective_user.id)
-	context.bot.send_message(chat_id=game.chat_id, text='OK wrote ' + str(update.effective_user.username) + ' as captain')
+	context.bot.send_message(chat_id=game.chat_id, text='OK wrote ' + str(update.effective_user.username) + ' as ' + role)
 
-def guesser_callback(update, context, game):
+def guesser_callback(update, context, game, role):
 	game.guessers.append(update.effective_user.id)
 	if update.effective_user.id in game.captains:
 		game.captains.remove(update.effective_user.id)
-	context.bot.send_message(chat_id=game.chat_id, text='OK wrote ' + str(update.effective_user.username) + ' as guesser')
+	context.bot.send_message(chat_id=game.chat_id, text='OK wrote ' + str(update.effective_user.username) + ' as ' + role)
 
 def tik(update, context):
 	word = update.callback_query.data
@@ -269,18 +282,20 @@ def tik(update, context):
 	if word == 'guesser' + get_emoji('b'):
 		game.blue_guesser = True
 	if word.startswith('guesser'):
-		guesser_callback(update, context, game)
+		guesser_callback(update, context, game, word)
 		return
 	if word.startswith('captain'):
-		captain_callback(update, context, game)
+		captain_callback(update, context, game, word)
 		return
 	if not update.effective_user.id in game.guessers:
 		return	
-	logging.info('{GAME = ' + str(game.chat_id) + ' USER_TRY = \n' + game.field.all[int(word)].word + '}')
 	word = int(word)
 	if word < game.field.n:
+		logging.info('{GAME = ' + str(game.chat_id) + ' USER_TRY = \n' + game.field.all[int(word)].word + '}')
 		if not game.field.all[word].used:
 			game.reading_buffer.append(game.field.all[word].word)
+	else:
+		game.reading_buffer.append('-')
 	game.play()
 
 def main():
