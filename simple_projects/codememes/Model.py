@@ -249,6 +249,8 @@ def do_guess(game, word):
 	return sorted_list[0][1]
 
 def do_clear(game, word):
+	if word == '-':
+		return True
 	field = game.field
 	for i, w in enumerate(field):
 		if w.used:
