@@ -217,7 +217,8 @@ def echo(update, context):
 				pass
 			game.left = number
 			game.current_word = word
-			game.answers += ['_user_'] * game.left 
+			game.answers += ['_user_'] * game.left
+			game.moves.append((word, number))
 			game.edit(str((word, number)), game.id, game.move_id)
 		game.play()
 
