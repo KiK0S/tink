@@ -71,7 +71,7 @@ class Game:
 				if self.move_id != 0:
 					self.edit(str((self.current_word, self.left)), self.id, self.move_id)
 				try:
-					self.edit('Let\'s start the game!\nCurrent move — ' + get_emoji(self.current_move), self.id, self.field_id)
+					self.edit('Let\'s start the game!\nCurrent move — ' + get_emoji(self.current_move), self.id, self.field_id, reply_markup=get_markup(self))
 					self.edit_markup(chat_id=self.id, message_id=self.field_id, reply_markup=get_markup(self))
 				except:
 					pass
@@ -102,7 +102,7 @@ class Game:
 				else:
 					self.current_move = 'r'
 				try:
-					self.edit('Let\'s start the game!\nCurrent move — ' + get_emoji(self.current_move), self.id, self.field_id)
+					self.edit('Let\'s start the game!\nCurrent move — ' + get_emoji(self.current_move), self.id, self.field_id, reply_markup=get_markup(self))
 				except:
 					pass
 		if self.current_turn == 'c':
