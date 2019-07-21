@@ -120,7 +120,7 @@ class Field:
 	def print_with_markers(self):
 		res = ''
 		for s in self:
-			res += s.word + '_' + s.marker + '\n'
+			res += s.word + get_emoji(s.marker) + '\n'
 		return res
 	
 	def __repr__(self):
@@ -226,7 +226,7 @@ def bruteforce(game, marker):
 			logging.debug('{GAME = ' + str(game.chat_id) + ' GUESSED = \n' + str(guessed) + '}')
 			wordlist = [x for x, _ in guessed]
 			probs = [x for _, x in guessed]
-			all_moves.append((calc_profit(wordlist[:number], marker, probs[:number]), (word, number), [x.word + '_' + x.marker for x in wordlist]))
+			all_moves.append((calc_profit(wordlist[:number], marker, probs[:number]), (word, number), [x.word + get_emoji(x.marker) for x in wordlist]))
 	return sorted(all_moves)[::-1][:game.field.n]
 
 def do_move(game):

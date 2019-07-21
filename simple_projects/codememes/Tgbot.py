@@ -39,10 +39,12 @@ class Game:
 	def make_move(self):
 		move = do_move(self)
 		logging.info('{GAME = ' + str(self.chat_id) + ' MOVE = \n' + str(move) + '}')
-		self.edit(str(move), self.id, self.move_id)
-		self.left = int(move[1])
-		self.current_word = ''.join(str(move[0]))
-
+		try:
+			self.edit(str(move), self.id, self.move_id)
+			self.left = int(move[1])
+			self.current_word = ''.join(str(move[0]))
+		except:
+			pass
 	def play(self):
 		need_to_reload = False
 		if self.mode == 1:
@@ -188,7 +190,7 @@ def start(update, context):
 		return
 	game = all_games[update.message.chat_id]
 	if len(game.captains) + len(game.guessers) == 0:
-		context.bot.send_message(chat_id=update.message.chat_id, text='No players. Use /captain or /guesser')
+		context.bot.send_message(chat_id=update.message.chat_id, text='/init first')
 		return
 	game.status = 1
 	logging.info('{GAME = ' + str(game.chat_id) + ' NEW_FIELD = \n' + game.field.print_with_markers() + '}')
@@ -196,6 +198,8 @@ def start(update, context):
 	logging.info('{GAME = ' + str(game.chat_id) + ' GUESSERS = \n' + str(game.guessers) + '}')
 	for user in game.captains:
 		context.bot.send_message(chat_id=user, text=game.field.print_with_markers())
+	if game.mode == 1:
+		game.current_move = 'r'
 	game.field_id = game.send(chat_id=game.id, text='Let\'s start the game!\nCurrent move — ' + get_emoji(game.current_move), reply_markup=get_markup(game)).message_id
 	if len(game.captains) == 0:
 		game.move_id = game.send(chat_id=game.id, text='Please wait for AI to move').message_id
@@ -299,10 +303,10 @@ def tik(update, context):
 	game.play()
 
 def main():
-	REQUEST_KWARGS={
-		'proxy_url': 'http://' + secret_data['proxy_ip'] + ':' + secret_data['proxy_port'],
-	}
-	updater = Updater(secret_data['token'], use_context=True, request_kwargs=REQUEST_KWARGS)
+	# REQUEST_KWARGS={
+	# 	'proxy_url': 'http://' + secret_data['proxy_ip'] + ':' + secret_data['proxy_port'],
+	# }
+	updater = Updater(secret_data['token'], use_context=True) #, request_kwargs=REQUEST_KWARGS)
 	dp = updater.dispatcher
 	dp.add_handler(CommandHandler("start", start))
 	dp.add_handler(CommandHandler("setup", setup))
