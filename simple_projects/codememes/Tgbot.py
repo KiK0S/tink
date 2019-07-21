@@ -303,10 +303,10 @@ def tik(update, context):
 	game.play()
 
 def main():
-	# REQUEST_KWARGS={
-	# 	'proxy_url': 'http://' + secret_data['proxy_ip'] + ':' + secret_data['proxy_port'],
-	# }
-	updater = Updater(secret_data['token'], use_context=True) #, request_kwargs=REQUEST_KWARGS)
+	REQUEST_KWARGS={
+		'proxy_url': 'http://' + secret_data['proxy_ip'] + ':' + secret_data['proxy_port'],
+	}
+	updater = Updater(secret_data['token'], use_context=True, request_kwargs=REQUEST_KWARGS)
 	dp = updater.dispatcher
 	dp.add_handler(CommandHandler("start", start))
 	dp.add_handler(CommandHandler("setup", setup))

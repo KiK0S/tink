@@ -226,7 +226,7 @@ def bruteforce(game, marker):
 			logging.debug('{GAME = ' + str(game.chat_id) + ' GUESSED = \n' + str(guessed) + '}')
 			wordlist = [x for x, _ in guessed]
 			probs = [x for _, x in guessed]
-			all_moves.append((calc_profit(wordlist[:number], marker, probs[:number]), (word, number), [x.word + get_emoji(x.marker) for x in wordlist]))
+			all_moves.append((calc_profit(wordlist[:number], marker, probs[:number]), (word, number), [str(x) for x in wordlist]))
 	return sorted(all_moves)[::-1][:game.field.n]
 
 def do_move(game):
