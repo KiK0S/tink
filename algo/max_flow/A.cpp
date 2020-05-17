@@ -41,34 +41,36 @@ const int MOD = 1e9 + 7;
 
 int n, m;
 
+
 struct edge {
-	int to, cap, flow = 0;
-	edge() {}
-	edge(int a, int b) {
-		to = a;
-		cap = b;
+	int to, cap, flow;
+	edge(){}
+	edge(int a, int b, int c) {
+		to = a, cap = b, flow = c;
 	}
 };
 
 vector<edge> e;
 vector<int> g[MAXN];
-int SCALE = 1 << 30;
 int dist[MAXN];
 int used[MAXN];
+int ptr[MAXN];
+int timer = 1;
+int SCALE = 1 << 30;
 
 void bfs() {
-	for (int i = 0; i < n; i++) {
+	for (int i = 0; i < MAXN; i++) {
 		dist[i] = INF;
 	}
 	dist[0] = 0;
 	queue<int> q;
 	q.push(0);
-	while(q.size()) {
+	while (q.size()) {
 		int v = q.front();
 		q.pop();
 		for (auto id : g[v]) {
 			int to = e[id].to;
-			if (e[id].cap - e[id].flow >= SCALE && dist[to] == INF) {
+			if (dist[to] == INF && e[id].cap - e[id].flow >= SCALE) {
 				dist[to] = dist[v] + 1;
 				q.push(to);
 			}
@@ -77,15 +79,17 @@ void bfs() {
 }
 
 int dfs(int v, int mx = INF) {
-	if (used[v]) {
+	if (used[v] == timer) {
 		return 0;
 	}
-	if (mx == 0 || v == n - 1) {
+	if (v == MAXN - 1) {
 		return mx;
 	}
-	for (auto id : g[v]) {
+	used[v] = timer;
+	while (ptr[v] < g[v].size()) {
+		int id = g[v][ptr[v]];
 		int to = e[id].to;
-		if (dist[to] == dist[v] + 1) {
+		if (dist[to] == dist[v] + 1 && e[id].cap - e[id].flow >= SCALE) {
 			int x = 0;
 			if (x = dfs(to, min(mx, e[id].cap - e[id].flow))) {
 				e[id].flow += x;
@@ -93,9 +97,16 @@ int dfs(int v, int mx = INF) {
 				return x;
 			}
 		}
+		ptr[v]++;
 	}
-	used[v] = 1;
 	return 0;
+}
+
+void make_edge(int from, int to, int cap) {
+	e.emplace_back(to, cap, 0);
+	e.emplace_back(from, 0, 0);
+	g[from].push_back(e.size() - 2);
+	g[to].push_back(e.size() - 1);
 }
 
 inline void init() {
@@ -108,26 +119,26 @@ inline void solve() {
 		int a, b, c;
 		cin >> a >> b >> c;
 		a--, b--;
-		e.emplace_back(b, c);
-		e.emplace_back(a, 0);
-		g[a].push_back(e.size() - 2);
-		g[b].push_back(e.size() - 1);
+		make_edge(a, b, c);
 	}
 	int ans = 0;
+	timer = 1;
 	while (SCALE > 0) {
 		while (1) {
 			bfs();
-			memset(used, 0, sizeof(used));
-			if (dist[n - 1] == INF) {
+			if (dist[MAXN - 1] == INF) {
 				break;
 			}
 			int x = 0;
+			memset(ptr, 0, sizeof(ptr));
+			timer++;
 			while (x = dfs(0)) {
 				ans += x;
+				timer++;
 			}
 		}
 		SCALE >>= 1;
-	}	
+	}
 	cout << ans << '\n';
 }
 
@@ -145,3 +156,6 @@ signed main() {
 		solve();
 	return 0;
 }
+
+// START = 0
+// FINISH = MAXN - 1

@@ -286,5 +286,5 @@ def start_game():
 			print(guesses[ptr], end=' ')
 			ptr += 1
 		print()
-		print(answers[i])
+		print(anxswers[i])
 print('import ok')
